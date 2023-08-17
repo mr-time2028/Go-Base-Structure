@@ -3,26 +3,29 @@ package models
 import (
 	"context"
 	"database/sql"
+	"go-base-structure/database"
 	"log"
 	"time"
 )
 
+const dbTimeout = time.Second * 3
+
 type Book struct {
-	ID   int    `gorm:"primaryKey" json:"id"`
-	Name string `json:"name"`
+	ID   int `gorm:"primaryKey"`
+	Name string
 }
 
-// GetAll is an example of custom queries
+// GetAll is an example of custom sql queries, you can also use of gorm's custom queries using GormDB.Raw()
 func (b *Book) GetAll() ([]*Book, error) {
 	//return nil, nil
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
 	query := `select * from books`
 
 	var books []*Book
 
-	rows, err := SqlDB.QueryContext(ctx, query)
+	rows, err := database.SqlDB.QueryContext(ctx, query)
 	if err == sql.ErrNoRows {
 		return nil, err
 	} else if err != nil {

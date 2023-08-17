@@ -1,14 +1,11 @@
 package models
 
 import (
-	"database/sql"
 	"go-base-structure/cmd/config"
-	"gorm.io/gorm"
+	"go-base-structure/database"
 	"reflect"
 )
 
-var GormDB *gorm.DB
-var SqlDB *sql.DB
 var Models ModelManager
 
 type ModelManager struct {
@@ -16,10 +13,7 @@ type ModelManager struct {
 	User UserInterface
 }
 
-func NewDB(GD *gorm.DB, SD *sql.DB) {
-	GormDB = GD
-	SqlDB = SD
-
+func NewModels() {
 	Models = ModelManager{
 		Book: &Book{},
 		User: &User{},
@@ -33,7 +27,7 @@ func AutoMigrateModels() {
 		field := modelsValue.Field(i)
 		if field.Kind() == reflect.Interface {
 			model := field.Interface()
-			if err := GormDB.AutoMigrate(model); err != nil {
+			if err := database.GormDB.AutoMigrate(model); err != nil {
 				config.AppConfig.ErrorLog.Fatal(err)
 			}
 		}

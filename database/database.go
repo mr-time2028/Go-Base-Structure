@@ -9,6 +9,9 @@ import (
 	"gorm.io/gorm"
 )
 
+var GormDB *gorm.DB
+var SqlDB *sql.DB
+
 func getDSN() string {
 	dbName := helpers.GetEnvOrDefaultString("DB_NAME", "")
 	dbUser := helpers.GetEnvOrDefaultString("DB_USER", "")
@@ -41,7 +44,7 @@ func openDB(dsn string) (*gorm.DB, error) {
 	return db, err
 }
 
-func ConnectSQL() (*gorm.DB, *sql.DB) {
+func ConnectSQL() {
 	config.AppConfig.InfoLog.Println("Connecting to database...")
 
 	dsn := getDSN()
@@ -51,18 +54,19 @@ func ConnectSQL() (*gorm.DB, *sql.DB) {
 		config.AppConfig.ErrorLog.Fatal(err)
 	}
 
-	sqlDB, err := db.DB()
+	sdb, err := db.DB()
 	if err != nil {
 		config.AppConfig.ErrorLog.Fatal(err)
 	}
 
 	config.AppConfig.InfoLog.Println("Testing database connection...")
-	err = testDB(sqlDB)
+	err = testDB(sdb)
 	if err != nil {
 		config.AppConfig.ErrorLog.Fatal(err)
 	}
 
 	config.AppConfig.InfoLog.Println("Connected to database successfully!")
 
-	return db, sqlDB
+	GormDB = db
+	SqlDB = sdb
 }
