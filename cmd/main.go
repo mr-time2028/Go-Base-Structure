@@ -24,10 +24,10 @@ func main() {
 	}
 
 	// connect to the database
-	gormDB, sqlDB := database.ConnectSQL()
+	database.ConnectSQL()
 
 	// initial model and auto migration models
-	models.NewDB(gormDB, sqlDB)
+	models.NewModels()
 	models.AutoMigrateModels()
 
 	// run command (if user want to run a command) else run http server

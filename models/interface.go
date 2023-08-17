@@ -5,5 +5,5 @@ type BookInterface interface {
 }
 
 type UserInterface interface {
-	GetOne() (*User, error)
+	GetOne(email string) (*User, error)
 }
