@@ -2,8 +2,8 @@ package book
 
 import (
 	"go-base-structure/cmd/config"
-	"go-base-structure/helpers"
 	"go-base-structure/models"
+	"go-base-structure/pkg/json"
 	"net/http"
 )
 
@@ -14,7 +14,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		config.AppConfig.ErrorLog.Println("cannot get users: ", err)
 	}
 
-	err = helpers.WriteJSON(w, http.StatusOK, &users)
+	err = json.WriteJSON(w, http.StatusOK, &users)
 	if err != nil {
 		config.AppConfig.ErrorLog.Println("Unable to write json to output: ", err)
 	}

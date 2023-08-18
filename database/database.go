@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"go-base-structure/cmd/config"
-	"go-base-structure/helpers"
+	"go-base-structure/pkg/env"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -13,13 +13,13 @@ var GormDB *gorm.DB
 var SqlDB *sql.DB
 
 func getDSN() string {
-	dbName := helpers.GetEnvOrDefaultString("DB_NAME", "")
-	dbUser := helpers.GetEnvOrDefaultString("DB_USER", "")
-	dbPass := helpers.GetEnvOrDefaultString("DB_PASS", "")
-	dbHost := helpers.GetEnvOrDefaultString("DB_HOST", "localhost")
-	dbPort := helpers.GetEnvOrDefaultString("DB_PORT", "5432")
-	dbSSL := helpers.GetEnvOrDefaultString("DB_SSL", "disable")
-	dbZone := helpers.GetEnvOrDefaultString("DB_ZONE", "Asia/Tehran")
+	dbName := env.GetEnvOrDefaultString("DB_NAME", "")
+	dbUser := env.GetEnvOrDefaultString("DB_USER", "")
+	dbPass := env.GetEnvOrDefaultString("DB_PASS", "")
+	dbHost := env.GetEnvOrDefaultString("DB_HOST", "localhost")
+	dbPort := env.GetEnvOrDefaultString("DB_PORT", "5432")
+	dbSSL := env.GetEnvOrDefaultString("DB_SSL", "disable")
+	dbZone := env.GetEnvOrDefaultString("DB_ZONE", "Asia/Tehran")
 
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=%s",
 		dbHost, dbUser, dbPass, dbName, dbPort, dbSSL, dbZone)

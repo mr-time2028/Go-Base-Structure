@@ -2,14 +2,19 @@ package tests
 
 import (
 	"go-base-structure/cmd/config"
+	"go-base-structure/models"
 	"os"
 	"testing"
 )
 
-var cfg config.Config
+var testConfig config.Config
 
 func TestMain(m *testing.M) {
-	cfg.Port = 8000
+	// create a new logger
+	config.NewLogger()
+
+	// initial test model
+	models.NewTestModels()
 
 	os.Exit(m.Run())
 }

@@ -20,6 +20,13 @@ func NewModels() {
 	}
 }
 
+func NewTestModels() {
+	Models = ModelManager{
+		User: &TestUser{},
+		Book: &TestBook{},
+	}
+}
+
 func AutoMigrateModels() {
 	modelsValue := reflect.ValueOf(Models)
 
