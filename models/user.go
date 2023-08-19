@@ -2,7 +2,6 @@ package models
 
 import (
 	"errors"
-	"go-base-structure/database"
 	"gorm.io/gorm"
 )
 
@@ -16,7 +15,7 @@ type User struct {
 func (u *User) GetOne(email string) (*User, error) {
 	var user *User
 	condition := User{Email: email}
-	err := database.GormDB.Where(condition).First(&user).Error
+	err := modelsApp.DB.GormDB.Where(condition).First(&user).Error
 
 	if err == gorm.ErrRecordNotFound {
 		return nil, errors.New("user with this email not found")
@@ -25,5 +24,4 @@ func (u *User) GetOne(email string) (*User, error) {
 	} else {
 		return user, nil
 	}
-
 }

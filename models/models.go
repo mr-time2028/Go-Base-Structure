@@ -1,42 +1,20 @@
 package models
 
 import (
-	"go-base-structure/cmd/config"
 	"go-base-structure/database"
-	"reflect"
+	"go-base-structure/pkg/logging"
 )
 
-var Models ModelManager
+var modelsApp *models
 
-type ModelManager struct {
-	Book BookInterface
-	User UserInterface
+type models struct {
+	DB     *database.DB
+	Logger *logging.Logger
 }
 
-func NewModels() {
-	Models = ModelManager{
-		Book: &Book{},
-		User: &User{},
-	}
-}
-
-func NewTestModels() {
-	Models = ModelManager{
-		User: &TestUser{},
-		Book: &TestBook{},
-	}
-}
-
-func AutoMigrateModels() {
-	modelsValue := reflect.ValueOf(Models)
-
-	for i := 0; i < modelsValue.NumField(); i++ {
-		field := modelsValue.Field(i)
-		if field.Kind() == reflect.Interface {
-			model := field.Interface()
-			if err := database.GormDB.AutoMigrate(model); err != nil {
-				config.AppConfig.ErrorLog.Fatal(err)
-			}
-		}
+func NewModelsApp(logger *logging.Logger, DB *database.DB) {
+	modelsApp = &models{
+		DB:     DB,
+		Logger: logger,
 	}
 }

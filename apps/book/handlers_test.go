@@ -1,7 +1,6 @@
-package tests
+package book
 
 import (
-	"go-base-structure/apps/book"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -10,7 +9,7 @@ import (
 func TestHome(t *testing.T) {
 	rr := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/books/book-home", nil)
-	handler := http.HandlerFunc(book.Home)
+	handler := http.HandlerFunc(Home)
 
 	handler.ServeHTTP(rr, req)
 

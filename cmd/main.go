@@ -4,53 +4,79 @@ import (
 	"flag"
 	"fmt"
 	"github.com/joho/godotenv"
+	"go-base-structure/apps/book"
+	"go-base-structure/apps/user"
 	"go-base-structure/cmd/commands"
 	"go-base-structure/cmd/config"
 	"go-base-structure/cmd/routes"
 	"go-base-structure/database"
 	"go-base-structure/models"
+	"go-base-structure/pkg/env"
+	"go-base-structure/pkg/logging"
 	"net/http"
 	"os"
 )
 
 func main() {
-	// create a new logger
-	config.NewLogger()
+	var app config.Application
+
+	// create a new logging
+	logger := logging.NewLogger()
+	app.Logger = logger
 
 	// load .env file
 	err := godotenv.Load()
 	if err != nil {
-		config.AppConfig.ErrorLog.Fatal("Error loading .env file")
+		logger.ErrorLog.Fatal("Error loading .env file")
 	}
 
 	// connect to the database
-	database.ConnectSQL()
+	gormDB, sqlDB := database.ConnectSQL(logger)
+	var DB = &database.DB{
+		GormDB: gormDB,
+		SqlDB:  sqlDB,
+	}
+	defer sqlDB.Close()
+	app.DB = DB
 
-	// initial model and auto migration models
-	models.NewModels()
-	models.AutoMigrateModels()
+	// initial model and auto migration repository
+	mdls := models.NewModels()
+	app.Models = mdls
+
+	models.AutoMigrateModels(logger, gormDB, mdls)
+
+	models.NewModelsApp(logger, DB)
+
+	// register your apps
+	book.NewBookApp(&app)
+	user.NewUserApp(&app)
 
 	// run command (if user want to run a command) else run http server
 	command := flag.Bool("command", false, "Run specific command")
 	flag.Parse()
 
 	if *command {
-		RunCommands()
+		commands.NewCommandsApp(&app)
+		RunCommands(logger)
 	} else {
-		err = serveHTTP()
+		HTTPPort := env.GetEnvOrDefaultString("HTTP_PORT", "8000")
+		Domain := env.GetEnvOrDefaultString("DOMAIN", "localhost")
+		var cfg = &config.Config{
+			HTTPPort: HTTPPort,
+			Domain:   Domain,
+		}
+		app.Config = cfg
+		err = serveHTTP(&app)
 		if err != nil {
-			config.AppConfig.ErrorLog.Fatal("Failed to start the server: ", err)
+			logger.ErrorLog.Fatal("Failed to start the server: ", err)
 		}
 	}
 }
 
 // serveHTTP starts http server
-func serveHTTP() error {
-	config.AppConfig.HTTPPort = 8000
-	config.AppConfig.Domain = "localhost"
-
-	config.AppConfig.InfoLog.Printf("The HTTP server is running on port %d", config.AppConfig.HTTPPort)
-	err := http.ListenAndServe(fmt.Sprintf(":%d", config.AppConfig.HTTPPort), routes.Routes())
+func serveHTTP(app *config.Application) error {
+	app.Logger.InfoLog.Println("The HTTP server is running on port", app.Config.HTTPPort)
+	err := http.ListenAndServe(fmt.Sprintf(":%s", app.Config.HTTPPort), routes.Routes())
 	if err != nil {
 		return err
 	}
@@ -59,17 +85,17 @@ func serveHTTP() error {
 }
 
 // RunCommands runs any command that user determine in CLI using -command parameter
-func RunCommands() {
+func RunCommands(logger *logging.Logger) {
 	if len(os.Args) < 3 {
-		fmt.Println("It seems you want to run a command.")
-		fmt.Println("Usage: go run main.go -command <YOUR COMMAND NAME>")
+		logger.ErrorLog.Println("It seems you want to run a command.")
+		logger.ErrorLog.Println("Usage: go run main.go -command <YOUR COMMAND NAME>")
 		return
 	}
 
 	commandName := os.Args[2]
 	command, ok := commands.Commands[commandName]
 	if !ok {
-		fmt.Println("Invalid command.")
+		logger.ErrorLog.Println("Invalid command.")
 		return
 	}
 	command.Function()

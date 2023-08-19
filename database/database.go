@@ -3,14 +3,21 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"go-base-structure/cmd/config"
 	"go-base-structure/pkg/env"
+	"go-base-structure/pkg/logging"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"time"
 )
 
-var GormDB *gorm.DB
-var SqlDB *sql.DB
+const maxOpenDBConn = 10
+const maxIdleDBConn = 5
+const maxDBLifetime = 5 * time.Minute
+
+type DB struct {
+	GormDB *gorm.DB
+	SqlDB  *sql.DB
+}
 
 func getDSN() string {
 	dbName := env.GetEnvOrDefaultString("DB_NAME", "")
@@ -44,29 +51,35 @@ func openDB(dsn string) (*gorm.DB, error) {
 	return db, err
 }
 
-func ConnectSQL() {
-	config.AppConfig.InfoLog.Println("Connecting to database...")
+func ConnectSQL(logger *logging.Logger) (*gorm.DB, *sql.DB) {
+	logger.InfoLog.Println("Connecting to database...")
 
 	dsn := getDSN()
 
 	db, err := openDB(dsn)
 	if err != nil {
-		config.AppConfig.ErrorLog.Fatal(err)
+		logger.ErrorLog.Fatal(err)
 	}
 
 	sdb, err := db.DB()
 	if err != nil {
-		config.AppConfig.ErrorLog.Fatal(err)
+		logger.ErrorLog.Fatal(err)
 	}
+	sdb.SetMaxOpenConns(maxOpenDBConn)
+	sdb.SetMaxIdleConns(maxIdleDBConn)
+	sdb.SetConnMaxLifetime(maxDBLifetime)
 
-	config.AppConfig.InfoLog.Println("Testing database connection...")
+	logger.InfoLog.Println("Testing database connection...")
 	err = testDB(sdb)
 	if err != nil {
-		config.AppConfig.ErrorLog.Fatal(err)
+		logger.ErrorLog.Fatal(err)
 	}
 
-	config.AppConfig.InfoLog.Println("Connected to database successfully!")
+	if err != nil {
+		logger.ErrorLog.Fatal(err)
+	}
 
-	GormDB = db
-	SqlDB = sdb
+	logger.InfoLog.Println("Connected to database successfully!")
+
+	return db, sdb
 }
