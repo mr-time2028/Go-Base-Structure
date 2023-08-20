@@ -2,17 +2,17 @@ package models
 
 import (
 	"go-base-structure/database"
-	"go-base-structure/pkg/logging"
+	"go-base-structure/pkg/logger"
 )
 
 var modelsApp *models
 
 type models struct {
 	DB     *database.DB
-	Logger *logging.Logger
+	Logger *logger.Logger
 }
 
-func NewModelsApp(logger *logging.Logger, DB *database.DB) {
+func NewModelsApp(logger *logger.Logger, DB *database.DB) {
 	modelsApp = &models{
 		DB:     DB,
 		Logger: logger,

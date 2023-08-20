@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"go-base-structure/pkg/env"
-	"go-base-structure/pkg/logging"
+	"go-base-structure/pkg/logger"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"time"
@@ -51,7 +51,7 @@ func openDB(dsn string) (*gorm.DB, error) {
 	return db, err
 }
 
-func ConnectSQL(logger *logging.Logger) (*gorm.DB, *sql.DB) {
+func ConnectSQL(logger *logger.Logger) (*gorm.DB, *sql.DB) {
 	logger.InfoLog.Println("Connecting to database...")
 
 	dsn := getDSN()
@@ -71,10 +71,6 @@ func ConnectSQL(logger *logging.Logger) (*gorm.DB, *sql.DB) {
 
 	logger.InfoLog.Println("Testing database connection...")
 	err = testDB(sdb)
-	if err != nil {
-		logger.ErrorLog.Fatal(err)
-	}
-
 	if err != nil {
 		logger.ErrorLog.Fatal(err)
 	}

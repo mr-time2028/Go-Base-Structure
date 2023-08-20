@@ -1,6 +1,8 @@
 package commands
 
-import "go-base-structure/cmd/config"
+import (
+	"go-base-structure/cmd/config"
+)
 
 var commandsApp *config.Application
 

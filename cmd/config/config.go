@@ -3,12 +3,12 @@ package config
 import (
 	"go-base-structure/database"
 	"go-base-structure/models"
-	"go-base-structure/pkg/logging"
+	"go-base-structure/pkg/logger"
 )
 
 type Application struct {
 	Config *Config
-	Logger *logging.Logger
+	Logger *logger.Logger
 	DB     *database.DB
 	Models *models.ModelManager
 }

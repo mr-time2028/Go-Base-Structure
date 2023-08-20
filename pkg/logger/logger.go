@@ -1,4 +1,4 @@
-package logging
+package logger
 
 import (
 	"log"
@@ -11,7 +11,7 @@ type Logger struct {
 	WarningLog *log.Logger
 }
 
-// NewLogger customize our logging
+// NewLogger customize our logger
 func NewLogger() *Logger {
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)

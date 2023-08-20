@@ -1,7 +1,7 @@
 package models
 
 import (
-	"go-base-structure/pkg/logging"
+	"go-base-structure/pkg/logger"
 	"gorm.io/gorm"
 	"reflect"
 )
@@ -33,7 +33,7 @@ func NewTestModels() *ModelManager {
 	}
 }
 
-func AutoMigrateModels(logger *logging.Logger, gormDB *gorm.DB, models *ModelManager) {
+func AutoMigrateModels(logger *logger.Logger, gormDB *gorm.DB, models *ModelManager) {
 	modelsValue := reflect.ValueOf(*models)
 
 	for i := 0; i < modelsValue.NumField(); i++ {
