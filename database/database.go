@@ -4,21 +4,22 @@ import (
 	"database/sql"
 	"fmt"
 	"go-base-structure/pkg/env"
-	"go-base-structure/pkg/logger"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"time"
 )
 
-const maxOpenDBConn = 10
-const maxIdleDBConn = 5
-const maxDBLifetime = 5 * time.Minute
-
+// DB contains sql and nosql dbs
 type DB struct {
 	GormDB *gorm.DB
 	SqlDB  *sql.DB
 }
 
+const maxOpenDBConn = 10
+const maxIdleDBConn = 5
+const maxDBLifetime = 5 * time.Minute
+
+// getDSN return dsn string for connection to the database
 func getDSN() string {
 	dbName := env.GetEnvOrDefaultString("DB_NAME", "")
 	dbUser := env.GetEnvOrDefaultString("DB_USER", "")
@@ -34,6 +35,7 @@ func getDSN() string {
 	return dsn
 }
 
+// testDB ping to the database to ensure database is open
 func testDB(d *sql.DB) error {
 	err := d.Ping()
 	if err != nil {
@@ -42,6 +44,7 @@ func testDB(d *sql.DB) error {
 	return nil
 }
 
+// openDB open the database with dsn from getDSN
 func openDB(dsn string) (*gorm.DB, error) {
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
@@ -51,31 +54,30 @@ func openDB(dsn string) (*gorm.DB, error) {
 	return db, err
 }
 
-func ConnectSQL(logger *logger.Logger) (*gorm.DB, *sql.DB) {
-	logger.InfoLog.Println("Connecting to database...")
-
+// ConnectSQL get dsn and open db and return DB instance
+func ConnectSQL() (*DB, error) {
 	dsn := getDSN()
 
 	db, err := openDB(dsn)
 	if err != nil {
-		logger.ErrorLog.Fatal(err)
+		return nil, err
 	}
 
 	sdb, err := db.DB()
 	if err != nil {
-		logger.ErrorLog.Fatal(err)
+		return nil, err
 	}
 	sdb.SetMaxOpenConns(maxOpenDBConn)
 	sdb.SetMaxIdleConns(maxIdleDBConn)
 	sdb.SetConnMaxLifetime(maxDBLifetime)
 
-	logger.InfoLog.Println("Testing database connection...")
 	err = testDB(sdb)
 	if err != nil {
-		logger.ErrorLog.Fatal(err)
+		return nil, err
 	}
 
-	logger.InfoLog.Println("Connected to database successfully!")
-
-	return db, sdb
+	return &DB{
+		GormDB: db,
+		SqlDB:  sdb,
+	}, nil
 }

@@ -1,25 +1,30 @@
 package logger
 
 import (
-	"log"
+	"github.com/sirupsen/logrus"
 	"os"
 )
 
 type Logger struct {
-	ErrorLog   *log.Logger
-	InfoLog    *log.Logger
-	WarningLog *log.Logger
+	*logrus.Logger
 }
 
-// NewLogger customize our logger
+// NewLogger configs application logger
 func NewLogger() *Logger {
-	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
-	errorLog := log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
-	warningLog := log.New(os.Stdout, "WARNING\t", log.Ldate|log.Ltime|log.Lshortfile)
+	logger := logrus.New()
+
+	logger.SetReportCaller(true)
+	logger.SetFormatter(&logrus.JSONFormatter{
+		PrettyPrint: true,
+	})
+
+	file, err := os.OpenFile("logfile.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		logger.Fatal("failed to open log file:", err)
+	}
+	logger.SetOutput(file)
 
 	return &Logger{
-		ErrorLog:   errorLog,
-		InfoLog:    infoLog,
-		WarningLog: warningLog,
+		Logger: logger,
 	}
 }

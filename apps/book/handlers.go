@@ -9,11 +9,15 @@ import (
 func Home(w http.ResponseWriter, r *http.Request) {
 	users, err := bookApp.Models.Book.GetAll()
 	if err != nil {
-		bookApp.Logger.ErrorLog.Println("cannot get users: ", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		bookApp.Logger.Error("cannot get users from the database: ", err)
+		return
 	}
 
 	err = json.WriteJSON(w, http.StatusOK, &users)
 	if err != nil {
-		bookApp.Logger.ErrorLog.Println("Unable to write json to output: ", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		bookApp.Logger.Error("unable to write json: ", err)
+		return
 	}
 }

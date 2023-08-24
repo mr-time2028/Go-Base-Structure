@@ -3,14 +3,16 @@ package models
 import (
 	"context"
 	"database/sql"
-	"log"
+	"errors"
 	"time"
 )
 
+// dbTimeout is maximum of time that database operation can happen, use to create a context
 const dbTimeout = time.Second * 3
 
+// Book is a type for book table
 type Book struct {
-	ID   int `gorm:"primaryKey"`
+	ID   int `gorm:"primaryKey;autoIncrement"`
 	Name string
 }
 
@@ -25,10 +27,9 @@ func (b *Book) GetAll() ([]*Book, error) {
 
 	rows, err := modelsApp.DB.SqlDB.QueryContext(ctx, query)
 	if err == sql.ErrNoRows {
-		return nil, err
+		return nil, errors.New("no rows found when query to books table. " + err.Error())
 	} else if err != nil {
-		log.Println("Error query to plans table")
-		return nil, err
+		return nil, errors.New("query to books table failed. " + err.Error())
 	}
 	defer rows.Close()
 
@@ -39,16 +40,14 @@ func (b *Book) GetAll() ([]*Book, error) {
 			&book.Name,
 		)
 		if err != nil {
-			log.Println("Error scanning a plan row")
-			return nil, err
+			return nil, errors.New("scanning book row failed. " + err.Error())
 		}
 
 		books = append(books, &book)
 	}
 
 	if err = rows.Err(); err != nil {
-		log.Println("Error returned by plans rows")
-		return nil, err
+		return nil, errors.New("something wrong with book rows. " + err.Error())
 	}
 
 	return books, nil

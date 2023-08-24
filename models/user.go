@@ -18,7 +18,7 @@ func (u *User) GetOne(email string) (*User, error) {
 	err := modelsApp.DB.GormDB.Where(condition).First(&user).Error
 
 	if err == gorm.ErrRecordNotFound {
-		return nil, errors.New("user with this email not found")
+		return nil, errors.New("user with this email not found " + err.Error())
 	} else if err != nil {
 		return nil, err
 	} else {

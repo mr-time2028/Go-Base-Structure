@@ -6,6 +6,7 @@ import (
 	"testing"
 )
 
+// TestHome simply test home handler
 func TestHome(t *testing.T) {
 	rr := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/books/book-home", nil)
@@ -14,6 +15,6 @@ func TestHome(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 
 	if rr.Code != http.StatusOK {
-		t.Error("there is an error")
+		t.Error("some error")
 	}
 }

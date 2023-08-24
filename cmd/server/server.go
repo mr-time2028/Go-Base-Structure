@@ -7,8 +7,8 @@ import (
 	"go-base-structure/apps/book"
 	"go-base-structure/apps/user"
 	"go-base-structure/cmd/commands"
-	"go-base-structure/cmd/config"
 	"go-base-structure/cmd/routes"
+	"go-base-structure/cmd/settings"
 	"go-base-structure/database"
 	"go-base-structure/models"
 	"go-base-structure/pkg/env"
@@ -17,28 +17,30 @@ import (
 	"os"
 )
 
-func Serve() (*config.Application, error) {
+// Serve start our servers
+func Serve() (*settings.Application, error) {
 	app := newApplication()
 
 	// run command (if user want to run a command) else run http server
-	command := flag.Bool("command", false, "Run specific command")
+	command := flag.Bool("command", false, "run specific command")
 	flag.Parse()
 
 	if *command {
 		commands.NewCommandsApp(app)
 		runCommands(app)
 	} else {
-		err := serveHTTP(app)
+		err := HTTPServer(app)
 		if err != nil {
-			app.Logger.ErrorLog.Fatal("Failed to start the server: ", err)
+			app.Logger.Fatal("failed to start the HTTP server: ", err)
 		}
 	}
 
 	return app, nil
 }
 
-func newApplication() *config.Application {
-	var app config.Application
+// newApplication start our program
+func newApplication() *settings.Application {
+	var app settings.Application
 
 	// create a new logger
 	logger := logger.NewLogger()
@@ -47,15 +49,16 @@ func newApplication() *config.Application {
 	// load .env file
 	err := godotenv.Load()
 	if err != nil {
-		logger.ErrorLog.Fatal("Error loading .env file")
+		logger.Fatal("cannot loading .env file")
 	}
 
 	// connect to the database
-	gormDB, sqlDB := database.ConnectSQL(logger)
-	var DB = &database.DB{
-		GormDB: gormDB,
-		SqlDB:  sqlDB,
+	logger.Info("connecting to the database...")
+	DB, err := database.ConnectSQL()
+	if err != nil {
+		logger.Fatal("connecting to the database failed! ", err)
 	}
+	logger.Info("connected to the database successfully!")
 	app.DB = DB
 
 	// initial model
@@ -63,10 +66,14 @@ func newApplication() *config.Application {
 	app.Models = mdls
 
 	// auto migrations models
-	models.AutoMigrateModels(logger, gormDB, mdls)
+	err = mdls.AutoMigrateModels(DB.GormDB)
+	if err != nil {
+		logger.Fatal("auto migration failed! ", err)
+	}
+	logger.Info("auto migration was successful!")
 
 	// pass some config to models package
-	models.NewModelsApp(logger, DB)
+	models.NewModelsApp(DB)
 
 	// register your apps
 	book.NewBookApp(&app)
@@ -75,7 +82,7 @@ func newApplication() *config.Application {
 	// initial config
 	HTTPPort := env.GetEnvOrDefaultString("HTTP_PORT", "8000")
 	Domain := env.GetEnvOrDefaultString("DOMAIN", "localhost")
-	var cfg = &config.Config{
+	var cfg = &settings.Config{
 		HTTPPort: HTTPPort,
 		Domain:   Domain,
 	}
@@ -84,8 +91,9 @@ func newApplication() *config.Application {
 	return &app
 }
 
-func serveHTTP(app *config.Application) error {
-	app.Logger.InfoLog.Println("The HTTP server is running on port", app.Config.HTTPPort)
+// HTTPServer starts a HTTP server
+func HTTPServer(app *settings.Application) error {
+	app.Logger.Info("the HTTP server is running on port ", app.Config.HTTPPort)
 	err := http.ListenAndServe(fmt.Sprintf(":%s", app.Config.HTTPPort), routes.Routes())
 	if err != nil {
 		return err
@@ -94,19 +102,18 @@ func serveHTTP(app *config.Application) error {
 	return nil
 }
 
-// RunCommands runs any command that user determine in CLI using -command parameter
-func runCommands(app *config.Application) {
+// runCommands runs any command that user determine in CLI using -command parameter
+func runCommands(app *settings.Application) {
 	if len(os.Args) < 3 {
-		app.Logger.ErrorLog.Println("It seems you want to run a command.")
-		app.Logger.ErrorLog.Println("Usage: go run main.go -command <YOUR COMMAND NAME>")
-		return
+		app.Logger.Fatal("it seems you want to run a command. Usage: go run main.go -command <YOUR COMMAND NAME>")
 	}
 
 	commandName := os.Args[2]
+	os.Args = os.Args[2:]
+
 	command, ok := commands.Commands[commandName]
 	if !ok {
-		app.Logger.ErrorLog.Println("Invalid command.")
-		return
+		app.Logger.Fatal("invalid command.")
 	}
 	command.Function()
 }

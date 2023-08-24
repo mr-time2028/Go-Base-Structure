@@ -1,4 +1,4 @@
-package config
+package settings
 
 import (
 	"go-base-structure/database"
@@ -6,6 +6,7 @@ import (
 	"go-base-structure/pkg/logger"
 )
 
+// Application is our wide configuration for the application
 type Application struct {
 	Config *Config
 	Logger *logger.Logger
@@ -13,7 +14,7 @@ type Application struct {
 	Models *models.ModelManager
 }
 
-// Config is our wide configuration for the application
+// Config is our configuration about the server
 type Config struct {
 	HTTPPort string
 	Domain   string

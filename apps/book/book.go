@@ -1,11 +1,13 @@
 package book
 
 import (
-	"go-base-structure/cmd/config"
+	"go-base-structure/cmd/settings"
 )
 
-var bookApp *config.Application
+// bookApp is wide configuration instance belong to book app
+var bookApp *settings.Application
 
-func NewBookApp(app *config.Application) {
+// NewBookApp assign sent wide configuration instance to the bookApp variable
+func NewBookApp(app *settings.Application) {
 	bookApp = app
 }

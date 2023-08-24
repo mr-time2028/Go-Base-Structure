@@ -1,20 +1,18 @@
 package models
 
-import (
-	"go-base-structure/database"
-	"go-base-structure/pkg/logger"
-)
+import "go-base-structure/database"
 
-var modelsApp *models
+// modelsApp is wide configuration instance belong to models package
+var modelsApp *modelsConf
 
-type models struct {
-	DB     *database.DB
-	Logger *logger.Logger
+// modelsConf contains wide configuration settings we need in models package
+type modelsConf struct {
+	DB *database.DB
 }
 
-func NewModelsApp(logger *logger.Logger, DB *database.DB) {
-	modelsApp = &models{
-		DB:     DB,
-		Logger: logger,
+// NewModelsApp assign sent wide configuration instance to the modelsApp variable
+func NewModelsApp(DB *database.DB) {
+	modelsApp = &modelsConf{
+		DB: DB,
 	}
 }

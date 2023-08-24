@@ -1,6 +1,6 @@
 module go-base-structure
 
-go 1.18
+go 1.21
 
 require (
 	github.com/go-chi/chi/v5 v5.0.10
@@ -16,6 +16,8 @@ require (
 	github.com/jackc/pgx/v5 v5.4.3 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
+	github.com/sirupsen/logrus v1.9.3 // indirect
 	golang.org/x/crypto v0.12.0 // indirect
+	golang.org/x/sys v0.11.0 // indirect
 	golang.org/x/text v0.12.0 // indirect
 )

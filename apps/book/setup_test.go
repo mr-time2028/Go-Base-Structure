@@ -1,18 +1,20 @@
 package book
 
 import (
-	"go-base-structure/cmd/config"
+	"github.com/sirupsen/logrus"
+	"go-base-structure/cmd/settings"
 	"go-base-structure/models"
 	"go-base-structure/pkg/logger"
 	"os"
 	"testing"
 )
 
-var testApp config.Application
+// testApp is wide configuration for our book app tests
+var testApp settings.Application
 
+// TestMain is a base set up and configuration for tests
 func TestMain(m *testing.M) {
-	// create a new logger
-	logger := logger.NewLogger()
+	logger := &logger.Logger{Logger: logrus.New()}
 	mdls := models.NewTestModels()
 
 	testApp.Logger = logger
