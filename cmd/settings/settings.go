@@ -3,6 +3,7 @@ package settings
 import (
 	"go-base-structure/database"
 	"go-base-structure/models"
+	"go-base-structure/pkg/auth"
 	"go-base-structure/pkg/logger"
 )
 
@@ -12,6 +13,7 @@ type Application struct {
 	Logger *logger.Logger
 	DB     *database.DB
 	Models *models.ModelManager
+	Auth   *auth.Auth
 }
 
 // Config is our configuration about the server

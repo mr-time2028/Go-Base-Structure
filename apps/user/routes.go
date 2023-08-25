@@ -9,7 +9,8 @@ import (
 func Routes() http.Handler {
 	mux := chi.NewRouter()
 
-	mux.Get("/user-home", Dashboard)
+	mux.Post("/login", Login)
+	mux.Post("/refresh", RefreshToken)
 
 	return mux
 }

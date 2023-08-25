@@ -6,8 +6,14 @@ type TestUser struct {
 	Password string
 }
 
-// GetOne for testing
-func (u *TestUser) GetOne(email string) (*User, error) {
+// GetUserByEmail for testing
+func (u *TestUser) GetUserByEmail(email string) (*User, error) {
+	var user *User
+	return user, nil
+}
+
+// GetUserByID for testing
+func (u *TestUser) GetUserByID(id int) (*User, error) {
 	var user *User
 	return user, nil
 }

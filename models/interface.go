@@ -10,7 +10,8 @@ type BookInterface interface {
 }
 
 type UserInterface interface {
-	GetOne(email string) (*User, error)
+	GetUserByEmail(email string) (*User, error)
+	GetUserByID(id int) (*User, error)
 }
 
 type ModelManager struct {

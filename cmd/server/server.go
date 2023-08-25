@@ -11,10 +11,12 @@ import (
 	"go-base-structure/cmd/settings"
 	"go-base-structure/database"
 	"go-base-structure/models"
+	"go-base-structure/pkg/auth"
 	"go-base-structure/pkg/env"
 	"go-base-structure/pkg/logger"
 	"net/http"
 	"os"
+	"time"
 )
 
 // Serve start our servers
@@ -51,6 +53,16 @@ func newApplication() *settings.Application {
 	if err != nil {
 		logger.Fatal("cannot loading .env file")
 	}
+
+	// jwt config
+	jAuth := &auth.Auth{
+		Issuer:        "localhost",
+		Audience:      "localhost",
+		Secret:        "testsecret",
+		TokenExpiry:   5 * time.Minute,
+		RefreshExpiry: 60 * time.Minute,
+	}
+	app.Auth = jAuth
 
 	// connect to the database
 	logger.Info("connecting to the database...")

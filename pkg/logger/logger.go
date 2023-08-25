@@ -5,6 +5,7 @@ import (
 	"os"
 )
 
+// Logger contains logger configs
 type Logger struct {
 	*logrus.Logger
 }

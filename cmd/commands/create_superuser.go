@@ -9,6 +9,8 @@ import (
 func createSuperUser() {
 	email := flag.String("email", "", "user email")
 	password := flag.String("password", "", "user password")
+	firstName := flag.String("firstName", "", "user first name")
+	lastName := flag.String("lastName", "", "user last name")
 	flag.Parse()
 
 	// validations goes here...
@@ -20,8 +22,10 @@ func createSuperUser() {
 	}
 
 	user := models.User{
-		Email:    *email,
-		Password: *password,
+		Email:     *email,
+		Password:  *password,
+		FirstName: *firstName,
+		LastName:  *lastName,
 		// consider an is_superuser field and set it to true here...
 	}
 	result := commandsApp.DB.GormDB.Create(&user)
