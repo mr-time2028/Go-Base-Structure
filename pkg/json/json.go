@@ -5,18 +5,33 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"strconv"
 )
 
 // ReadJSON read request and extract request payload from it
 func ReadJSON(w http.ResponseWriter, r *http.Request, data interface{}) error {
+	if r.Body == nil {
+		return errors.New("request body is empty")
+	}
+
 	maxBytes := 1048576 // one megabyte
 	r.Body = http.MaxBytesReader(w, r.Body, int64(maxBytes))
 
 	dec := json.NewDecoder(r.Body)
 	dec.DisallowUnknownFields()
+
 	err := dec.Decode(data)
 	if err != nil {
-		return err
+		if err == io.EOF {
+			return errors.New("request body is empty")
+		}
+		if syntaxErr, ok := err.(*json.SyntaxError); ok {
+			return errors.New("request body contains invalid JSON syntax at position " + strconv.Itoa(int(syntaxErr.Offset)))
+		}
+		if unmarshalErr, ok := err.(*json.UnmarshalTypeError); ok {
+			return errors.New("request body contains invalid data type at position " + strconv.Itoa(int(unmarshalErr.Offset)))
+		}
+		return errors.New("failed to decode request body: " + err.Error())
 	}
 
 	err = dec.Decode(&struct{}{})

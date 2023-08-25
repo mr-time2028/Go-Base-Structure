@@ -34,6 +34,7 @@ type TokenPairs struct {
 // Claims contains default registered claims for jwt
 type Claims struct {
 	jwt.RegisteredClaims
+	TokenType string
 }
 
 // GenerateTokenPair generates access and refresh tokens
@@ -46,8 +47,8 @@ func (a *Auth) GenerateTokenPair(user *JwtUser) (TokenPairs, error) {
 	claims["aud"] = a.Audience
 	claims["iss"] = a.Issuer
 	claims["iat"] = time.Now().UTC().Unix()
-	claims["typ"] = "JWT"
 	claims["exp"] = time.Now().UTC().Add(a.TokenExpiry).Unix()
+	claims["TokenType"] = "access"
 
 	signedToken, err := token.SignedString([]byte(a.Secret))
 	if err != nil {
@@ -60,6 +61,7 @@ func (a *Auth) GenerateTokenPair(user *JwtUser) (TokenPairs, error) {
 	refreshTokenClaims["iss"] = a.Issuer
 	refreshTokenClaims["iat"] = time.Now().UTC().Unix()
 	refreshTokenClaims["exp"] = time.Now().UTC().Add(a.RefreshExpiry).Unix()
+	refreshTokenClaims["TokenType"] = "refresh"
 
 	signedRefreshToken, err := refreshToken.SignedString([]byte(a.Secret))
 	if err != nil {
