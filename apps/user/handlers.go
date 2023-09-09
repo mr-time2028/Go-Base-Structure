@@ -4,25 +4,25 @@ import (
 	"errors"
 	"go-base-structure/pkg/auth"
 	"go-base-structure/pkg/json"
+	"go-base-structure/pkg/validators"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 // Login log user in
 func Login(w http.ResponseWriter, r *http.Request) {
 	var requestPayload struct {
-		Email    string
-		Password string
+		Email    string `json:"email" required:"true"`
+		Password string `json:"password" required:"true"`
 	}
 
-	if err := json.ReadJSON(w, r, &requestPayload); err != nil {
-		http.Error(w, "internal server error", http.StatusInternalServerError)
-		userApp.Logger.Error("unable to read json: ", err)
+	if validator := json.ReadJSON(w, r, &requestPayload); !validator.Valid() {
+		if err := json.ErrorMapJSON(w, validator.Errors); err != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			userApp.Logger.Error("unable to write error json: ", err)
+		}
 		return
 	}
-
-	// validation for email goes here...
 
 	user, err := userApp.Models.User.GetUserByEmail(requestPayload.Email)
 	if err != nil {
@@ -32,6 +32,16 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validation for password goes here...
+	validator := validators.New()
+	isMatchPassword := validator.PasswordMatchesValidation(user.Password, requestPayload.Password)
+
+	if !isMatchPassword {
+		if err = json.ErrorStrJSON(w, errors.New("incorrect email or password")); err != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			userApp.Logger.Error("unable to write error json: ", err)
+		}
+		return
+	}
 
 	jwtUser := &auth.JwtUser{
 		ID:        user.ID,
@@ -63,8 +73,8 @@ func RefreshToken(w http.ResponseWriter, r *http.Request) {
 		AccessToken string `json:"access"`
 	}
 
-	if err := json.ReadJSON(w, r, &requestPayload); err != nil {
-		if err = json.ErrorJSON(w, err); err != nil {
+	if validator := json.ReadJSON(w, r, &requestPayload); !validator.Valid() {
+		if err := json.ErrorMapJSON(w, validator.Errors); err != nil {
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 			userApp.Logger.Error("unable to write error json: ", err)
 		}
@@ -72,11 +82,8 @@ func RefreshToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	claims, err := userApp.Auth.ParseWithClaims(requestPayload.RefreshToken)
-	if err != nil ||
-		claims.Issuer != userApp.Auth.Issuer ||
-		claims.ExpiresAt.Before(time.Now()) ||
-		claims.TokenType != "refresh" {
-		if err = json.ErrorJSON(w, errors.New("token is invalid or has expired"), http.StatusUnauthorized); err != nil {
+	if err != nil || claims.TokenType != "refresh" {
+		if err = json.ErrorStrJSON(w, errors.New("token is invalid or has expired"), http.StatusUnauthorized); err != nil {
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 			userApp.Logger.Error("unable to write error json: ", err)
 		}

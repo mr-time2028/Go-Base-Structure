@@ -3,43 +3,25 @@ package json
 import (
 	"encoding/json"
 	"errors"
-	"io"
+	"fmt"
+	"go-base-structure/pkg/validators"
 	"net/http"
-	"strconv"
 )
 
 // ReadJSON read request and extract request payload from it
-func ReadJSON(w http.ResponseWriter, r *http.Request, data interface{}) error {
-	if r.Body == nil {
-		return errors.New("request body is empty")
-	}
-
+func ReadJSON(w http.ResponseWriter, r *http.Request, data interface{}) validators.Validation {
 	maxBytes := 1048576 // one megabyte
 	r.Body = http.MaxBytesReader(w, r.Body, int64(maxBytes))
 
-	dec := json.NewDecoder(r.Body)
-	dec.DisallowUnknownFields()
+	// validation
+	validator := validators.New()
+	validator.JsonValidation(r, data)
 
-	err := dec.Decode(data)
-	if err != nil {
-		if err == io.EOF {
-			return errors.New("request body is empty")
-		}
-		if syntaxErr, ok := err.(*json.SyntaxError); ok {
-			return errors.New("request body contains invalid JSON syntax at position " + strconv.Itoa(int(syntaxErr.Offset)))
-		}
-		if unmarshalErr, ok := err.(*json.UnmarshalTypeError); ok {
-			return errors.New("request body contains invalid data type at position " + strconv.Itoa(int(unmarshalErr.Offset)))
-		}
-		return errors.New("failed to decode request body: " + err.Error())
+	if !validator.Valid() {
+		return validator
 	}
 
-	err = dec.Decode(&struct{}{})
-	if err != io.EOF {
-		return errors.New("body must have only a single json value")
-	}
-
-	return nil
+	return validators.Validation{}
 }
 
 // WriteJSON write data to output
@@ -65,8 +47,50 @@ func WriteJSON(w http.ResponseWriter, status int, data interface{}, headers ...h
 	return nil
 }
 
-// ErrorJSON write an error message to output
-func ErrorJSON(w http.ResponseWriter, err error, status ...int) error {
+// ErrorMapJSON write an error map message as a json to the output
+func ErrorMapJSON(w http.ResponseWriter, error validators.Errors) error {
+	// {
+	//		"error": true
+	// 		"message": {
+	//			"email": [
+	//				"first error for email",
+	//				"second error for email",
+	//			],
+	//			"password": [
+	//				"some error for password"
+	//			]
+	//      }
+	// }
+	type jsonResponse struct {
+		Error   bool                `json:"error"`
+		Message map[string][]string `json:"message"`
+	}
+
+	var payload jsonResponse
+	var statusCode int
+
+	payload.Error = true
+	payload.Message = error.MessageMap
+	statusCode = error.Code
+
+	if statusCode == http.StatusInternalServerError {
+		return errors.New(fmt.Sprintf("%v", payload.Message))
+	}
+
+	err := WriteJSON(w, statusCode, &payload)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ErrorStrJSON write a str error message as a json to the output
+func ErrorStrJSON(w http.ResponseWriter, error error, status ...int) error {
+	// {
+	//		"error": true,
+	//    	"message": "some error"
+	// }
 	type jsonResponse struct {
 		Error   bool   `json:"error"`
 		Message string `json:"message"`
@@ -79,9 +103,9 @@ func ErrorJSON(w http.ResponseWriter, err error, status ...int) error {
 
 	var payload jsonResponse
 	payload.Error = true
-	payload.Message = err.Error()
+	payload.Message = error.Error()
 
-	err = WriteJSON(w, statusCode, payload)
+	err := WriteJSON(w, statusCode, &payload)
 	if err != nil {
 		return err
 	}
