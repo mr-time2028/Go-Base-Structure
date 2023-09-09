@@ -5,6 +5,7 @@ import (
 	"go-base-structure/pkg/auth"
 	"go-base-structure/pkg/json"
 	"go-base-structure/pkg/validators"
+	"gorm.io/gorm"
 	"net/http"
 	"strconv"
 )
@@ -26,8 +27,15 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	user, err := userApp.Models.User.GetUserByEmail(requestPayload.Email)
 	if err != nil {
-		http.Error(w, "internal server error", http.StatusInternalServerError)
-		userApp.Logger.Error("unable get user from database: ", err)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			if err = json.ErrorStrJSON(w, errors.New("incorrect email or password"), http.StatusUnauthorized); err != nil {
+				http.Error(w, "internal server error", http.StatusInternalServerError)
+				userApp.Logger.Error("unable to write error json: ", err)
+			}
+		} else {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			userApp.Logger.Error("unable get user from database: ", err)
+		}
 		return
 	}
 
@@ -99,8 +107,15 @@ func RefreshToken(w http.ResponseWriter, r *http.Request) {
 
 	user, err := userApp.Models.User.GetUserByID(userID)
 	if err != nil {
-		http.Error(w, "internal server error", http.StatusInternalServerError)
-		userApp.Logger.Error("cannot get user from the database: ", err)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			if err = json.ErrorStrJSON(w, errors.New("incorrect email or password"), http.StatusUnauthorized); err != nil {
+				http.Error(w, "internal server error", http.StatusInternalServerError)
+				userApp.Logger.Error("unable to write error json: ", err)
+			}
+		} else {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			userApp.Logger.Error("unable get user from database: ", err)
+		}
 		return
 	}
 
