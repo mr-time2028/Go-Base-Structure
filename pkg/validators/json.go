@@ -21,6 +21,7 @@ const (
 	JSONUnknownField        = `unknown field in JSON: %s`
 )
 
+// MinLengthTag check min length of a json field
 func (v *Validation) MinLengthTag(field reflect.StructField, fieldValue reflect.Value) {
 	jsonFieldName := field.Tag.Get("json")
 	minTag := field.Tag.Get("min")
@@ -33,6 +34,7 @@ func (v *Validation) MinLengthTag(field reflect.StructField, fieldValue reflect.
 	}
 }
 
+// MaxLengthTag check max length of a json field
 func (v *Validation) MaxLengthTag(field reflect.StructField, fieldValue reflect.Value) {
 	jsonFieldName := field.Tag.Get("json")
 	maxTag := field.Tag.Get("max")
@@ -45,6 +47,7 @@ func (v *Validation) MaxLengthTag(field reflect.StructField, fieldValue reflect.
 	}
 }
 
+// RequiredTag force client to send a specific json field
 func (v *Validation) RequiredTag(field reflect.StructField, fieldValue reflect.Value) {
 	fieldType := fieldValue.Type()
 
@@ -60,6 +63,7 @@ func (v *Validation) RequiredTag(field reflect.StructField, fieldValue reflect.V
 	}
 }
 
+// JsonValidation decode json and do json validation
 func (v *Validation) JsonValidation(r *http.Request, data interface{}) {
 	if r.Body == nil {
 		v.Errors.Add("json", JSONEmptyBodyErrMsg)
