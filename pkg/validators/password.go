@@ -1,38 +1,21 @@
 package validators
 
 import (
-	"errors"
 	"golang.org/x/crypto/bcrypt"
 	"unicode"
 )
 
-type PassErrors map[string][]string
-
-func newPassErrors() PassErrors {
-	return make(map[string][]string)
-}
-
-func (p PassErrors) AddError(msg string) {
-	p["password"] = append(p["password"], msg)
-}
-
-func PasswordMatchesValidation(hashedDBPassword, ClientPassword string) (bool, error) {
+func (v *Validation) PasswordMatchesValidation(hashedDBPassword, ClientPassword string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hashedDBPassword), []byte(ClientPassword))
 	if err != nil {
-		switch {
-		case errors.Is(err, bcrypt.ErrMismatchedHashAndPassword):
-			return false, bcrypt.ErrMismatchedHashAndPassword
-		default:
-			return false, err
-		}
+		v.Errors.Add("password", err.Error())
+		return false
 	}
 
-	return true, nil
+	return true
 }
 
-func PasswordCharacterValidation(password string) PassErrors {
-	passErrors := newPassErrors()
-
+func (v *Validation) PasswordCharacterValidation(password string) {
 	hasUppercase := false
 	hasLowercase := false
 	hasDigit := false
@@ -48,20 +31,18 @@ func PasswordCharacterValidation(password string) PassErrors {
 	}
 
 	if len(password) < 8 {
-		passErrors.AddError("password must be a minimum of 8 characters in length")
+		v.Errors.Add("password", "this field must be a minimum length of 8 characters")
 	}
 	if len(password) > 30 {
-		passErrors.AddError("password must be a maximum of 30 characters in length")
+		v.Errors.Add("password", "this field must be a maximum length of 30 characters")
 	}
 	if !hasUppercase {
-		passErrors.AddError("password must contain at least one uppercase letter")
+		v.Errors.Add("password", "this field must contain at least one uppercase letter")
 	}
 	if !hasLowercase {
-		passErrors.AddError("password must contain at least one lowercase letter")
+		v.Errors.Add("password", "this field must contain at least one lowercase letter")
 	}
 	if !hasDigit {
-		passErrors.AddError("password must contain at least one digit")
+		v.Errors.Add("password", "this field must contain at least one digit")
 	}
-
-	return passErrors
 }
