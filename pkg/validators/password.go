@@ -5,6 +5,7 @@ import (
 	"unicode"
 )
 
+// PasswordMatchesValidation check if two password are match, password from db (registered) and password from client
 func (v *Validation) PasswordMatchesValidation(hashedDBPassword, ClientPassword string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hashedDBPassword), []byte(ClientPassword))
 	if err != nil {
@@ -15,6 +16,7 @@ func (v *Validation) PasswordMatchesValidation(hashedDBPassword, ClientPassword 
 	return true
 }
 
+// PasswordCharacterValidation check if password characters are valid (min length, max length and etc.)
 func (v *Validation) PasswordCharacterValidation(password string) {
 	hasUppercase := false
 	hasLowercase := false
