@@ -3,23 +3,32 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"go-base-structure/cmd/config"
-	"go-base-structure/helpers"
+	"go-base-structure/pkg/env"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+	"time"
 )
 
-var GormDB *gorm.DB
-var SqlDB *sql.DB
+// DB contains sql and nosql dbs
+type DB struct {
+	GormDB *gorm.DB
+	SqlDB  *sql.DB
+}
 
+const maxOpenDBConn = 10
+const maxIdleDBConn = 5
+const maxDBLifetime = 5 * time.Minute
+
+// getDSN return dsn string for connection to the database
 func getDSN() string {
-	dbName := helpers.GetEnvOrDefaultString("DB_NAME", "")
-	dbUser := helpers.GetEnvOrDefaultString("DB_USER", "")
-	dbPass := helpers.GetEnvOrDefaultString("DB_PASS", "")
-	dbHost := helpers.GetEnvOrDefaultString("DB_HOST", "localhost")
-	dbPort := helpers.GetEnvOrDefaultString("DB_PORT", "5432")
-	dbSSL := helpers.GetEnvOrDefaultString("DB_SSL", "disable")
-	dbZone := helpers.GetEnvOrDefaultString("DB_ZONE", "Asia/Tehran")
+	dbName := env.GetEnvOrDefaultString("DB_NAME", "")
+	dbUser := env.GetEnvOrDefaultString("DB_USER", "")
+	dbPass := env.GetEnvOrDefaultString("DB_PASS", "")
+	dbHost := env.GetEnvOrDefaultString("DB_HOST", "localhost")
+	dbPort := env.GetEnvOrDefaultString("DB_PORT", "5432")
+	dbSSL := env.GetEnvOrDefaultString("DB_SSL", "disable")
+	dbZone := env.GetEnvOrDefaultString("DB_ZONE", "Asia/Tehran")
 
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=%s",
 		dbHost, dbUser, dbPass, dbName, dbPort, dbSSL, dbZone)
@@ -27,6 +36,7 @@ func getDSN() string {
 	return dsn
 }
 
+// testDB ping to the database to ensure database is open
 func testDB(d *sql.DB) error {
 	err := d.Ping()
 	if err != nil {
@@ -35,8 +45,11 @@ func testDB(d *sql.DB) error {
 	return nil
 }
 
+// openDB open the database with dsn from getDSN
 func openDB(dsn string) (*gorm.DB, error) {
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Silent),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -44,29 +57,30 @@ func openDB(dsn string) (*gorm.DB, error) {
 	return db, err
 }
 
-func ConnectSQL() {
-	config.AppConfig.InfoLog.Println("Connecting to database...")
-
+// ConnectSQL get dsn and open db and return DB instance
+func ConnectSQL() (*DB, error) {
 	dsn := getDSN()
 
 	db, err := openDB(dsn)
 	if err != nil {
-		config.AppConfig.ErrorLog.Fatal(err)
+		return nil, err
 	}
 
 	sdb, err := db.DB()
 	if err != nil {
-		config.AppConfig.ErrorLog.Fatal(err)
+		return nil, err
 	}
+	sdb.SetMaxOpenConns(maxOpenDBConn)
+	sdb.SetMaxIdleConns(maxIdleDBConn)
+	sdb.SetConnMaxLifetime(maxDBLifetime)
 
-	config.AppConfig.InfoLog.Println("Testing database connection...")
 	err = testDB(sdb)
 	if err != nil {
-		config.AppConfig.ErrorLog.Fatal(err)
+		return nil, err
 	}
 
-	config.AppConfig.InfoLog.Println("Connected to database successfully!")
-
-	GormDB = db
-	SqlDB = sdb
+	return &DB{
+		GormDB: db,
+		SqlDB:  sdb,
+	}, nil
 }

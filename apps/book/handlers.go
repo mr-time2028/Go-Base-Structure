@@ -1,21 +1,23 @@
 package book
 
 import (
-	"go-base-structure/cmd/config"
-	"go-base-structure/helpers"
-	"go-base-structure/models"
+	"go-base-structure/pkg/json"
 	"net/http"
 )
 
 // Home is a simple handler for book app
 func Home(w http.ResponseWriter, r *http.Request) {
-	users, err := models.Models.Book.GetAll()
+	users, err := bookApp.Models.Book.GetAll()
 	if err != nil {
-		config.AppConfig.ErrorLog.Println("cannot get users: ", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		bookApp.Logger.Error("cannot get users from the database: ", err)
+		return
 	}
 
-	err = helpers.WriteJSON(w, http.StatusOK, &users)
+	err = json.WriteJSON(w, http.StatusOK, &users)
 	if err != nil {
-		config.AppConfig.ErrorLog.Println("Unable to write json to output: ", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		bookApp.Logger.Error("unable to write json: ", err)
+		return
 	}
 }

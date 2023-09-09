@@ -1,20 +1,20 @@
-package tests
+package book
 
 import (
-	"go-base-structure/apps/book"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 )
 
+// TestHome simply test home handler
 func TestHome(t *testing.T) {
 	rr := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/books/book-home", nil)
-	handler := http.HandlerFunc(book.Home)
+	handler := http.HandlerFunc(Home)
 
 	handler.ServeHTTP(rr, req)
 
 	if rr.Code != http.StatusOK {
-		t.Error("there is an error")
+		t.Error("some error")
 	}
 }

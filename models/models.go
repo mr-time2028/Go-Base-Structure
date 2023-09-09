@@ -1,35 +1,18 @@
 package models
 
-import (
-	"go-base-structure/cmd/config"
-	"go-base-structure/database"
-	"reflect"
-)
+import "go-base-structure/database"
 
-var Models ModelManager
+// modelsApp is wide configuration instance belong to models package
+var modelsApp *modelsConf
 
-type ModelManager struct {
-	Book BookInterface
-	User UserInterface
+// modelsConf contains wide configuration settings we need in models package
+type modelsConf struct {
+	DB *database.DB
 }
 
-func NewModels() {
-	Models = ModelManager{
-		Book: &Book{},
-		User: &User{},
-	}
-}
-
-func AutoMigrateModels() {
-	modelsValue := reflect.ValueOf(Models)
-
-	for i := 0; i < modelsValue.NumField(); i++ {
-		field := modelsValue.Field(i)
-		if field.Kind() == reflect.Interface {
-			model := field.Interface()
-			if err := database.GormDB.AutoMigrate(model); err != nil {
-				config.AppConfig.ErrorLog.Fatal(err)
-			}
-		}
+// NewModelsApp assign sent wide configuration instance to the modelsApp variable
+func NewModelsApp(DB *database.DB) {
+	modelsApp = &modelsConf{
+		DB: DB,
 	}
 }

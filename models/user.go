@@ -1,29 +1,29 @@
 package models
 
-import (
-	"errors"
-	"go-base-structure/database"
-	"gorm.io/gorm"
-)
-
 type User struct {
-	ID       int
-	Email    string
-	Password string
+	ID        int
+	Email     string
+	FirstName string
+	LastName  string
+	Password  string
 }
 
-// GetOne is a simple example of how get one user using gorm orm
-func (u *User) GetOne(email string) (*User, error) {
+// GetUserByEmail is a simple example of how get one user by email using gorm orm
+func (u *User) GetUserByEmail(email string) (*User, error) {
 	var user *User
 	condition := User{Email: email}
-	err := database.GormDB.Where(condition).First(&user).Error
-
-	if err == gorm.ErrRecordNotFound {
-		return nil, errors.New("user with this email not found")
-	} else if err != nil {
+	if err := modelsApp.DB.GormDB.Where(condition).First(&user).Error; err != nil {
 		return nil, err
-	} else {
-		return user, nil
 	}
+	return user, nil
+}
 
+// GetUserByID is a simple example of how get one user by id using gorm orm
+func (u *User) GetUserByID(id int) (*User, error) {
+	var user *User
+	condition := User{ID: id}
+	if err := modelsApp.DB.GormDB.Where(condition).First(&user).Error; err != nil {
+		return nil, err
+	}
+	return user, nil
 }
