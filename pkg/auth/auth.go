@@ -46,8 +46,8 @@ func (a *Auth) GenerateTokenPair(user *JwtUser) (TokenPairs, error) {
 	claims["sub"] = fmt.Sprint(user.ID)
 	claims["aud"] = a.Audience
 	claims["iss"] = a.Issuer
-	claims["iat"] = time.Now().UTC().Unix()
-	claims["exp"] = time.Now().UTC().Add(a.TokenExpiry).Unix()
+	claims["iat"] = time.Now().Unix()
+	claims["exp"] = time.Now().Add(a.TokenExpiry).Unix()
 	claims["TokenType"] = "access"
 
 	signedToken, err := token.SignedString([]byte(a.Secret))
@@ -59,8 +59,8 @@ func (a *Auth) GenerateTokenPair(user *JwtUser) (TokenPairs, error) {
 	refreshTokenClaims := refreshToken.Claims.(jwt.MapClaims)
 	refreshTokenClaims["sub"] = fmt.Sprint(user.ID)
 	refreshTokenClaims["iss"] = a.Issuer
-	refreshTokenClaims["iat"] = time.Now().UTC().Unix()
-	refreshTokenClaims["exp"] = time.Now().UTC().Add(a.RefreshExpiry).Unix()
+	refreshTokenClaims["iat"] = time.Now().Unix()
+	refreshTokenClaims["exp"] = time.Now().Add(a.RefreshExpiry).Unix()
 	refreshTokenClaims["TokenType"] = "refresh"
 
 	signedRefreshToken, err := refreshToken.SignedString([]byte(a.Secret))
@@ -86,7 +86,7 @@ func (a *Auth) GetTokenFromHeaderAndVerify(w http.ResponseWriter, r *http.Reques
 		return "", nil, errors.New("there no authorization header")
 	}
 
-	headerParts := strings.Split(authHeader, "")
+	headerParts := strings.Split(authHeader, " ")
 	if len(headerParts) != 2 {
 		return "", nil, errors.New("invalid auth header")
 	}
@@ -102,15 +102,6 @@ func (a *Auth) GetTokenFromHeaderAndVerify(w http.ResponseWriter, r *http.Reques
 		return "", nil, err
 	}
 
-	if claims.Issuer != a.Issuer {
-		return "", nil, errors.New("invalid issuer")
-	}
-
-	if claims.ExpiresAt.Before(time.Now()) {
-		return "", nil, errors.New("token has expired")
-
-	}
-
 	return token, claims, nil
 }
 
@@ -124,10 +115,15 @@ func (a *Auth) ParseWithClaims(token string) (*Claims, error) {
 		return []byte(a.Secret), nil
 	})
 	if err != nil {
-		if strings.HasPrefix(err.Error(), "token is expired by") {
+		if strings.Contains(err.Error(), "token is expired") {
 			return nil, errors.New("token has expired")
 		}
 		return nil, err
 	}
+
+	if claims.Issuer != a.Issuer {
+		return nil, errors.New("invalid issuer")
+	}
+
 	return claims, nil
 }
