@@ -41,10 +41,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	// validation for password goes here...
 	validator := validators.New()
-	isMatchPassword := validator.PasswordMatchesValidation(user.Password, requestPayload.Password)
+	validator.PasswordMatchesValidation(user.Password, requestPayload.Password)
 
-	if !isMatchPassword {
-		if err = json.ErrorStrJSON(w, errors.New("incorrect email or password")); err != nil {
+	if !validator.Valid() {
+		if err = json.ErrorStrJSON(w, errors.New("incorrect email or password"), http.StatusUnauthorized); err != nil {
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 			userApp.Logger.Error("unable to write error json: ", err)
 		}

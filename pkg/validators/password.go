@@ -2,18 +2,17 @@ package validators
 
 import (
 	"golang.org/x/crypto/bcrypt"
+	"net/http"
 	"unicode"
 )
 
 // PasswordMatchesValidation check if two password are match, password from db (registered) and password from client
-func (v *Validation) PasswordMatchesValidation(hashedDBPassword, ClientPassword string) bool {
+func (v *Validation) PasswordMatchesValidation(hashedDBPassword, ClientPassword string) {
 	err := bcrypt.CompareHashAndPassword([]byte(hashedDBPassword), []byte(ClientPassword))
 	if err != nil {
 		v.Errors.Add("password", err.Error())
-		return false
+		v.Errors.Code = http.StatusUnauthorized
 	}
-
-	return true
 }
 
 // PasswordCharacterValidation check if password characters are valid (min length, max length and etc.)
