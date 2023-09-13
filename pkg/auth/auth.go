@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
+	"go-base-structure/pkg/env"
 	"net/http"
 	"strings"
 	"time"
@@ -35,6 +36,22 @@ type TokenPairs struct {
 type Claims struct {
 	jwt.RegisteredClaims
 	TokenType string
+}
+
+func NewJWTAuth() *Auth {
+	issuer := env.GetEnvOrDefaultString("ISSUER", "localhost")
+	audience := env.GetEnvOrDefaultString("AUDIENCE", "localhost")
+	secret := env.GetEnvOrDefaultString("SECRET", "")
+	tokenExpiry := env.GetEnvOrDefaultInt("TOKEN_EXPIRY", 5)
+	refreshExpiry := env.GetEnvOrDefaultInt("REFRESH_EXPIRY", 60)
+
+	return &Auth{
+		Issuer:        issuer,
+		Audience:      audience,
+		Secret:        secret,
+		TokenExpiry:   time.Duration(tokenExpiry) * time.Minute,
+		RefreshExpiry: time.Duration(refreshExpiry) * time.Minute,
+	}
 }
 
 // GenerateTokenPair generates access and refresh tokens

@@ -16,7 +16,6 @@ import (
 	"go-base-structure/pkg/logger"
 	"net/http"
 	"os"
-	"time"
 )
 
 // Serve start our servers
@@ -58,14 +57,8 @@ func newApplication() *settings.Application {
 	cfg := config.NewConfig()
 	app.Config = cfg
 
-	// jwt config
-	jAuth := &auth.Auth{
-		Issuer:        "localhost",
-		Audience:      "localhost",
-		Secret:        "testsecret",
-		TokenExpiry:   5 * time.Minute,
-		RefreshExpiry: 60 * time.Minute,
-	}
+	// JWT settings
+	jAuth := auth.NewJWTAuth()
 	app.Auth = jAuth
 
 	// connect to the database
