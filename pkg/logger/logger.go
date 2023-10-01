@@ -2,6 +2,7 @@ package logger
 
 import (
 	"github.com/sirupsen/logrus"
+	"net/http"
 	"os"
 )
 
@@ -11,21 +12,29 @@ type Logger struct {
 }
 
 // NewLogger configs application logger
-func NewLogger() *Logger {
+func NewLogger(fileName ...string) (*Logger, error) {
 	logger := logrus.New()
 
 	logger.SetReportCaller(true)
-	logger.SetFormatter(&logrus.JSONFormatter{
-		PrettyPrint: true,
-	})
 
-	file, err := os.OpenFile("logfile.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-	if err != nil {
-		logger.Fatal("failed to open log file:", err)
+	if len(fileName) > 0 {
+		logger.SetFormatter(&logrus.JSONFormatter{
+			PrettyPrint: true,
+		})
+
+		file, err := os.OpenFile(fileName[0], os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+		if err != nil {
+			return nil, err
+		}
+		logger.SetOutput(file)
 	}
-	logger.SetOutput(file)
 
 	return &Logger{
 		Logger: logger,
-	}
+	}, nil
+}
+
+func (l *Logger) ServerError(w http.ResponseWriter, logMessage string, err error) {
+	http.Error(w, "internal server error", http.StatusInternalServerError)
+	l.Errorf("%s: %s", logMessage, err.Error())
 }

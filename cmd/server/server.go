@@ -14,6 +14,7 @@ import (
 	"go-base-structure/pkg/auth"
 	"go-base-structure/pkg/database"
 	"go-base-structure/pkg/logger"
+	"log"
 	"net/http"
 	"os"
 )
@@ -44,11 +45,14 @@ func newApplication() *settings.Application {
 	var app settings.Application
 
 	// create a new logger
-	logr := logger.NewLogger()
+	logr, err := logger.NewLogger("logFile.log")
+	if err != nil {
+		log.Fatal("failed to open log file: ", err.Error())
+	}
 	app.Logger = logr
 
 	// load .env file
-	err := godotenv.Load()
+	err = godotenv.Load()
 	if err != nil {
 		logr.Fatal("cannot loading .env file")
 	}
