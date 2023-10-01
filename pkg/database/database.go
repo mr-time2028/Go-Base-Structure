@@ -84,3 +84,18 @@ func ConnectSQL() (*DB, error) {
 		SqlDB:  sdb,
 	}, nil
 }
+
+// ConnectTestSQL used when you want set up the database for the tests
+func ConnectTestSQL() (*DB, error) {
+	dsn := `host=localhost user=postgres password=password dbname=testDB port=5432 sslmode=disable TimeZone=Asia/Tehran`
+	db, _ := gorm.Open(postgres.Open(dsn), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Silent),
+	})
+
+	sdb, _ := db.DB()
+
+	return &DB{
+		GormDB: db,
+		SqlDB:  sdb,
+	}, nil
+}
