@@ -8,6 +8,7 @@ import (
 type BookInterface interface {
 	GetAll() ([]*Book, error)
 	InsertOneBook(*Book) (int, error)
+	InsertManyBooks([]*Book) (int64, []int, error)
 }
 
 type UserInterface interface {

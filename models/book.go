@@ -75,3 +75,52 @@ func (b *Book) InsertOneBook(book *Book) (int, error) {
 
 	return newBookID, nil
 }
+
+// InsertManyBooks insert many books to the database at the same time (create in batches)
+func (b *Book) InsertManyBooks(books []*Book) (int64, []int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	query := `insert into books (name) values`
+
+	var totalInserted int64
+	for i, book := range books {
+		query += fmt.Sprintf(` ('%s')`, book.Name)
+		if i < len(books)-1 {
+			query += ","
+		}
+		totalInserted += 1
+	}
+	query += ` returning id`
+
+	tx, err := modelsApp.DB.SqlDB.BeginTx(ctx, nil)
+	if err != nil {
+		return 0, nil, err
+	}
+	defer tx.Rollback()
+
+	rows, err := tx.QueryContext(ctx, query)
+	if err != nil {
+		return 0, nil, err
+	}
+	defer rows.Close()
+
+	var newBooksID []int
+	for rows.Next() {
+		var newBookID int
+		if err = rows.Scan(&newBookID); err != nil {
+			return 0, nil, err
+		}
+		newBooksID = append(newBooksID, newBookID)
+	}
+
+	if err = rows.Err(); err != nil {
+		return 0, nil, err
+	}
+
+	if err = tx.Commit(); err != nil {
+		return 0, nil, err
+	}
+
+	return totalInserted, newBooksID, nil
+}
