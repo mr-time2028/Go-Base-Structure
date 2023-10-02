@@ -14,7 +14,7 @@ const (
 	refreshExpiry = 60 * time.Minute
 )
 
-func setupAuth() *Auth {
+func setUpAuth() *Auth {
 	return &Auth{
 		Issuer:        "localhost",
 		Audience:      "localhost",

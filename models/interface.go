@@ -30,13 +30,6 @@ func NewModels() *ModelManager {
 	}
 }
 
-func NewTestModels() *ModelManager {
-	return &ModelManager{
-		Book: &TestBook{},
-		User: &TestUser{},
-	}
-}
-
 func (models *ModelManager) AutoMigrateModels(gormDB *gorm.DB) error {
 	modelsValue := reflect.ValueOf(*models)
 
