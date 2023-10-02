@@ -14,6 +14,7 @@ type BookInterface interface {
 type UserInterface interface {
 	GetUserByEmail(email string) (*User, error)
 	GetUserByID(id int) (*User, error)
+	InsertOneUser(user *User) (int, error)
 }
 
 type ModelManager struct {
