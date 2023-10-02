@@ -15,6 +15,7 @@ type UserInterface interface {
 	GetUserByEmail(email string) (*User, error)
 	GetUserByID(id int) (*User, error)
 	InsertOneUser(user *User) (int, error)
+	InsertManyUsers(user []*User) (int64, []int, error)
 }
 
 type ModelManager struct {
