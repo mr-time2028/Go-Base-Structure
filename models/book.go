@@ -3,6 +3,7 @@ package models
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -48,4 +49,29 @@ func (b *Book) GetAll() ([]*Book, error) {
 	}
 
 	return books, nil
+}
+
+// InsertOneBook simply insert one book to the database
+func (b *Book) InsertOneBook(book *Book) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	query := `insert into books (name) values ($1) returning id`
+
+	tx, err := modelsApp.DB.SqlDB.BeginTx(ctx, nil)
+	if err != nil {
+		return 0, err
+	}
+	defer tx.Rollback()
+
+	var newBookID int
+	if err = tx.QueryRowContext(ctx, query, book.Name).Scan(&newBookID); err != nil {
+		return 0, err
+	}
+
+	if err = tx.Commit(); err != nil {
+		return 0, err
+	}
+
+	return newBookID, nil
 }

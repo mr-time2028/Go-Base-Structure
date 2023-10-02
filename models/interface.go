@@ -7,6 +7,7 @@ import (
 
 type BookInterface interface {
 	GetAll() ([]*Book, error)
+	InsertOneBook(*Book) (int, error)
 }
 
 type UserInterface interface {
