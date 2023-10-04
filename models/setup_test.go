@@ -4,7 +4,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"go-base-structure/pkg/database"
 	"go-base-structure/pkg/logger"
-	"log"
 	"os"
 	"reflect"
 	"testing"
@@ -34,17 +33,17 @@ func addDefaultData() error {
 		{Name: "Pride and Prejudice"},
 	}
 
+	if err := testModelsApp.DB.GormDB.CreateInBatches(defaultBooks, len(defaultBooks)).Error; err != nil {
+		logr.Fatal("addDefaultData error while adding default book(s) data to the database: ", err.Error())
+	}
+
 	var defaultUsers = []*User{
 		{Email: "David@test.com", Password: "DavidPass"},
 		{Email: "John@test.com", Password: "JohnPass"},
 	}
 
-	var defaultData []interface{}
-	defaultData = append(defaultData, interfaceSlice(defaultBooks)...)
-	defaultData = append(defaultData, interfaceSlice(defaultUsers)...)
-
-	if err := testModelsApp.DB.GormDB.CreateInBatches(defaultData, len(defaultData)).Error; err != nil {
-		log.Printf("error adding default user(s) data to the database: %v", err)
+	if err := testModelsApp.DB.GormDB.CreateInBatches(defaultUsers, len(defaultUsers)).Error; err != nil {
+		logr.Fatal("addDefaultData error while adding default user(s) data to the database: ", err.Error())
 	}
 
 	return nil
