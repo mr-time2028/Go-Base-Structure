@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"log"
 	"os"
 	"testing"
 )
@@ -26,7 +27,10 @@ func removeFileIfExists(filename string) error {
 func setUpTest() {}
 
 func tearDownTest() {
-	_ = removeFileIfExists(fileName)
+	err := removeFileIfExists(fileName)
+	if err != nil {
+		log.Fatal("testTearDown error while remove log file if exists: ", err.Error())
+	}
 }
 
 func TestMain(m *testing.M) {

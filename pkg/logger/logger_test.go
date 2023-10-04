@@ -23,7 +23,7 @@ func TestNewLogger(t *testing.T) {
 	// test logging to the file
 	logr, err := NewLogger(fileName)
 	if err != nil {
-		t.Errorf("unexpected error while initial logger: %s", err.Error())
+		t.Fatal("unexpected error while initial logger: ", err.Error())
 	}
 
 	logr.Info("log something to the file")
@@ -39,7 +39,7 @@ func TestNewLogger(t *testing.T) {
 	// test logging to the console
 	logr, err = NewLogger()
 	if err != nil {
-		t.Errorf("unexpected error while initial logger: %s", err.Error())
+		t.Fatal("unexpected error while initial logger: ", err.Error())
 	}
 
 	logOutput := &bytes.Buffer{}
