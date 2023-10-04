@@ -38,6 +38,7 @@ type Claims struct {
 	TokenType string
 }
 
+// NewJWTAuth initial an Auth instance
 func NewJWTAuth() *Auth {
 	issuer := env.GetEnvOrDefaultString("ISSUER", "localhost")
 	audience := env.GetEnvOrDefaultString("AUDIENCE", "localhost")
@@ -51,6 +52,17 @@ func NewJWTAuth() *Auth {
 		Secret:        secret,
 		TokenExpiry:   time.Duration(tokenExpiry) * time.Minute,
 		RefreshExpiry: time.Duration(refreshExpiry) * time.Minute,
+	}
+}
+
+// NewTestJWTAuth initial an test auth.Auth instance for test
+func NewTestJWTAuth() *Auth {
+	return &Auth{
+		Issuer:        "test.com",
+		Audience:      "test.com",
+		Secret:        "testsecret",
+		TokenExpiry:   5 * time.Minute,
+		RefreshExpiry: 60 * time.Minute,
 	}
 }
 

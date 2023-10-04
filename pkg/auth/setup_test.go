@@ -14,16 +14,6 @@ const (
 	refreshExpiry = 60 * time.Minute
 )
 
-func setUpAuth() *Auth {
-	return &Auth{
-		Issuer:        "localhost",
-		Audience:      "localhost",
-		Secret:        "verysecret",
-		TokenExpiry:   tokenExpiry,
-		RefreshExpiry: refreshExpiry,
-	}
-}
-
 // Helper function to generate an expired token
 func generateExpiredToken(secret string) string {
 	token := jwt.New(jwt.SigningMethodHS256)

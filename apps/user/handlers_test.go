@@ -3,6 +3,7 @@ package user
 import (
 	"encoding/json"
 	"fmt"
+	"go-base-structure/pkg/auth"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -24,12 +25,41 @@ func TestLogin(t *testing.T) {
 		requestBody        string
 		expectedStatusCode int
 	}{
-		{"valid data", `{"email": "hamid@test.com", "password": "testPass"}`, http.StatusOK},
-		{"no user row", `{"email": "norows@test.com", "password": "testPass"}`, http.StatusUnauthorized},
-		{"no body", ``, http.StatusBadRequest},
-		{"no password", `{"email": "any@example.com"}`, http.StatusBadRequest},
-		{"no email", `{"password": "randompassword"}`, http.StatusBadRequest},
-		{"bad json", `{"password: "randompassword"}`, http.StatusBadRequest},
+		{
+			"valid data",
+			`{"email": "admin@test.com", "password": "FAdminPass"}`,
+			http.StatusOK,
+		},
+		{
+			"no user row",
+			`{"email": "norows@test.com", "password": "testPass"}`,
+			http.StatusUnauthorized,
+		},
+		{
+			"wrong password",
+			`{"email": "David@test.com", "password": "WrongPass"}`,
+			http.StatusUnauthorized,
+		},
+		{
+			"no body",
+			``,
+			http.StatusBadRequest,
+		},
+		{
+			"no password",
+			`{"email": "any@example.com"}`,
+			http.StatusBadRequest,
+		},
+		{
+			"no email",
+			`{"password": "randomPass"}`,
+			http.StatusBadRequest,
+		},
+		{
+			"bad json",
+			`{"password: "randomPass"}`,
+			http.StatusBadRequest,
+		},
 	}
 
 	for _, e := range theTests {
@@ -41,26 +71,66 @@ func TestLogin(t *testing.T) {
 }
 
 func TestRefreshToken(t *testing.T) {
-	// request to login to receive access and refresh token
-	rr := FakePostRequest(`{"email": "hamid@test.com", "password": "testPass"}`, "/login", http.HandlerFunc(Login))
+	// request to login
 	var response struct {
 		RefreshToken string `json:"refresh"`
 		AccessToken  string `json:"access"`
 	}
+	rr := FakePostRequest(`{"email": "admin@test.com", "password": "FAdminPass"}`, "/login", http.HandlerFunc(Login))
 	err := json.Unmarshal(rr.Body.Bytes(), &response)
 	if err != nil {
 		t.Errorf("error parsing response: %v", err)
 	}
 
-	// case 1: test with valid refresh token
-	rr = FakePostRequest(fmt.Sprintf(`{"refresh": "%s"}`, response.RefreshToken), "/refresh", http.HandlerFunc(RefreshToken))
-	if http.StatusOK != rr.Code {
-		t.Errorf("%s: returned wrong status code; expected %d but got %d", "valid data", http.StatusOK, rr.Code)
+	// test refresh path
+	var theTests = []struct {
+		name               string
+		requestBody        string
+		expectedStatusCode int
+	}{
+		{
+			"valid refresh",
+			fmt.Sprintf(`{"refresh": "%s"}`, response.RefreshToken),
+			http.StatusOK,
+		},
+		{
+			"access instead of refresh",
+			fmt.Sprintf(`{"refresh": "%s"}`, response.AccessToken),
+			http.StatusUnauthorized,
+		},
+		{
+			"invalid refresh",
+			fmt.Sprintf(`{"refresh": "%s"}`, response.RefreshToken[:10]),
+			http.StatusUnauthorized,
+		},
+		{
+			"no body",
+			``,
+			http.StatusBadRequest,
+		},
+		{
+			"bad json",
+			`{"password: "randomPass"}`,
+			http.StatusBadRequest,
+		},
 	}
 
-	// case 2: send access instead of refresh
-	rr = FakePostRequest(fmt.Sprintf(`{"refresh": "%s"}`, response.AccessToken), "/refresh", http.HandlerFunc(RefreshToken))
-	if http.StatusUnauthorized != rr.Code {
-		t.Errorf("%s: returned wrong status code; expected %d but got %d", "access instead refresh", http.StatusUnauthorized, rr.Code)
+	for _, e := range theTests {
+		rr = FakePostRequest(e.requestBody, "/refresh", http.HandlerFunc(RefreshToken))
+		if e.expectedStatusCode != rr.Code {
+			t.Errorf("%s: returned wrong status code; expected %d but got %d", e.name, e.expectedStatusCode, rr.Code)
+		}
+	}
+
+	// test when user not in database but has a valid refresh token (id 5 is not in database)
+	jUser := &auth.JwtUser{
+		ID:        5,
+		FirstName: "Alex",
+		LastName:  "Parker",
+	}
+	tokens, _ := userApp.Auth.GenerateTokenPair(jUser)
+	rr = FakePostRequest(fmt.Sprintf(`{"refresh": "%s"}`, tokens.RefreshToken), "/refresh", http.HandlerFunc(RefreshToken))
+	if rr.Code != http.StatusUnauthorized {
+		t.Errorf("%s: returned wrong status code; expected %d but got %d", "valid refresh, invalid user", http.StatusUnauthorized, rr.Code)
 	}
 }
