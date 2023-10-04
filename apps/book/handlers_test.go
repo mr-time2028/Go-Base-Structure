@@ -15,6 +15,10 @@ func TestHome(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 
 	if rr.Code != http.StatusOK {
-		t.Error("some error")
+		t.Errorf("expected status %d, but got %d", http.StatusOK, rr.Code)
+	}
+
+	if rr.Body == nil {
+		t.Error("unexpected body, body is nil")
 	}
 }
