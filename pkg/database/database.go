@@ -84,3 +84,44 @@ func ConnectSQL() (*DB, error) {
 		SqlDB:  sdb,
 	}, nil
 }
+
+// ConnectTestSQL used when you want set up the database for the tests
+func ConnectTestSQL() (*DB, error) {
+	dsn := `host=localhost user=postgres password=password dbname=testDB port=5432 sslmode=disable TimeZone=Asia/Tehran`
+	db, _ := gorm.Open(postgres.Open(dsn), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Silent),
+	})
+
+	sdb, _ := db.DB()
+
+	return &DB{
+		GormDB: db,
+		SqlDB:  sdb,
+	}, nil
+}
+
+// GetAllTables gather all tables name that exists in the database
+func (db *DB) GetAllTables() ([]string, error) {
+	tables, err := db.GormDB.Migrator().GetTables()
+	if err != nil {
+		return nil, err
+	}
+
+	return tables, nil
+}
+
+// DropAllTables drop all tables in the database
+func (db *DB) DropAllTables() error {
+	tables, err := db.GetAllTables()
+	if err != nil {
+		return err
+	}
+
+	for _, table := range tables {
+		if err = db.GormDB.Migrator().DropTable(table); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

@@ -1,6 +1,6 @@
 package models
 
-import "go-base-structure/database"
+import "go-base-structure/pkg/database"
 
 // modelsApp is wide configuration instance belong to models package
 var modelsApp *modelsConf

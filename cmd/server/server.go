@@ -8,15 +8,15 @@ import (
 	"go-base-structure/apps/user"
 	"go-base-structure/cmd/commands"
 	"go-base-structure/cmd/routes"
+	"go-base-structure/cmd/server/config"
 	"go-base-structure/cmd/settings"
-	"go-base-structure/database"
 	"go-base-structure/models"
 	"go-base-structure/pkg/auth"
-	"go-base-structure/pkg/env"
+	"go-base-structure/pkg/database"
 	"go-base-structure/pkg/logger"
+	"log"
 	"net/http"
 	"os"
-	"time"
 )
 
 // Serve start our servers
@@ -45,32 +45,33 @@ func newApplication() *settings.Application {
 	var app settings.Application
 
 	// create a new logger
-	logger := logger.NewLogger()
-	app.Logger = logger
+	logr, err := logger.NewLogger("logFile.log")
+	if err != nil {
+		log.Fatal("failed to open log file: ", err.Error())
+	}
+	app.Logger = logr
 
 	// load .env file
-	err := godotenv.Load()
+	err = godotenv.Load()
 	if err != nil {
-		logger.Fatal("cannot loading .env file")
+		logr.Fatal("cannot loading .env file")
 	}
 
-	// jwt config
-	jAuth := &auth.Auth{
-		Issuer:        "localhost",
-		Audience:      "localhost",
-		Secret:        "testsecret",
-		TokenExpiry:   5 * time.Minute,
-		RefreshExpiry: 60 * time.Minute,
-	}
+	// initial config
+	cfg := config.NewConfig()
+	app.Config = cfg
+
+	// JWT settings
+	jAuth := auth.NewJWTAuth()
 	app.Auth = jAuth
 
 	// connect to the database
-	logger.Info("connecting to the database...")
+	logr.Info("connecting to the database...")
 	DB, err := database.ConnectSQL()
 	if err != nil {
-		logger.Fatal("connecting to the database failed! ", err)
+		logr.Fatal("connecting to the database failed! ", err)
 	}
-	logger.Info("connected to the database successfully!")
+	logr.Info("connected to the database successfully!")
 	app.DB = DB
 
 	// initial model
@@ -80,9 +81,9 @@ func newApplication() *settings.Application {
 	// auto migrations models
 	err = mdls.AutoMigrateModels(DB.GormDB)
 	if err != nil {
-		logger.Fatal("auto migration failed! ", err)
+		logr.Fatal("auto migration failed! ", err)
 	}
-	logger.Info("auto migration was successful!")
+	logr.Info("auto migration was successful!")
 
 	// pass some config to models package
 	models.NewModelsApp(DB)
@@ -90,15 +91,6 @@ func newApplication() *settings.Application {
 	// register your apps
 	book.NewBookApp(&app)
 	user.NewUserApp(&app)
-
-	// initial config
-	HTTPPort := env.GetEnvOrDefaultString("HTTP_PORT", "8000")
-	Domain := env.GetEnvOrDefaultString("DOMAIN", "localhost")
-	var cfg = &settings.Config{
-		HTTPPort: HTTPPort,
-		Domain:   Domain,
-	}
-	app.Config = cfg
 
 	return &app
 }

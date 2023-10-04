@@ -11,9 +11,9 @@ func TestPasswordMatchesValidation(t *testing.T) {
 	ClientPassword := "MyPassword1234"
 
 	validator := New()
-	isMatch := validator.PasswordMatchesValidation(string(hashedDBPassword), ClientPassword)
+	validator.PasswordMatchesValidation(string(hashedDBPassword), ClientPassword)
 
-	if !isMatch {
+	if !validator.Valid() {
 		t.Errorf("the passwords should match, but do not")
 	}
 	if !validator.Valid() {
@@ -25,9 +25,9 @@ func TestPasswordMatchesValidation(t *testing.T) {
 	ClientPassword = "MyPass"
 
 	validator = New()
-	isMatch = validator.PasswordMatchesValidation(string(hashedDBPassword), ClientPassword)
+	validator.PasswordMatchesValidation(string(hashedDBPassword), ClientPassword)
 
-	if isMatch {
+	if validator.Valid() {
 		t.Errorf("the passwords should not be match, but they do")
 	}
 	errMsg := validator.Errors.Get("password")

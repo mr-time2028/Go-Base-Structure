@@ -7,11 +7,15 @@ import (
 
 type BookInterface interface {
 	GetAll() ([]*Book, error)
+	InsertOneBook(*Book) (int, error)
+	InsertManyBooks([]*Book) (int64, []int, error)
 }
 
 type UserInterface interface {
 	GetUserByEmail(email string) (*User, error)
 	GetUserByID(id int) (*User, error)
+	InsertOneUser(user *User) (int, error)
+	InsertManyUsers(user []*User) (int64, []int, error)
 }
 
 type ModelManager struct {
@@ -23,13 +27,6 @@ func NewModels() *ModelManager {
 	return &ModelManager{
 		Book: &Book{},
 		User: &User{},
-	}
-}
-
-func NewTestModels() *ModelManager {
-	return &ModelManager{
-		Book: &TestBook{},
-		User: &TestUser{},
 	}
 }
 

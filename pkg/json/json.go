@@ -16,12 +16,7 @@ func ReadJSON(w http.ResponseWriter, r *http.Request, data interface{}) validato
 	// validation
 	validator := validators.New()
 	validator.JsonValidation(r, data)
-
-	if !validator.Valid() {
-		return validator
-	}
-
-	return validators.Validation{}
+	return validator
 }
 
 // WriteJSON write data to output

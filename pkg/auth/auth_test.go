@@ -5,10 +5,25 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 )
 
+func TestAuth_NewJWTAuth(t *testing.T) {
+	jAuth := NewJWTAuth()
+
+	expectedIssuer := "localhost"
+	if jAuth.Issuer != expectedIssuer {
+		t.Errorf("expected %s as issuer but got %s", expectedIssuer, jAuth.Issuer)
+	}
+
+	expectedTokenExpiry := 5 * time.Minute
+	if jAuth.TokenExpiry != expectedTokenExpiry {
+		t.Errorf("expected %v as token expiry but got %v", expectedTokenExpiry, jAuth.TokenExpiry)
+	}
+}
+
 func TestAuth_GenerateTokenPair(t *testing.T) {
-	auth := setupAuth()
+	auth := NewTestJWTAuth()
 
 	jUser := &JwtUser{
 		ID:        1,
@@ -31,7 +46,7 @@ func TestAuth_GenerateTokenPair(t *testing.T) {
 }
 
 func TestAuth_GetTokenFromHeaderAndVerify(t *testing.T) {
-	auth := setupAuth()
+	auth := NewTestJWTAuth()
 	jUser := &JwtUser{
 		ID:        1,
 		FirstName: "John",
@@ -98,7 +113,7 @@ func TestAuth_GetTokenFromHeaderAndVerify(t *testing.T) {
 
 func TestAuth_ParseWithClaims(t *testing.T) {
 	// Set up the Auth instance
-	auth := setupAuth()
+	auth := NewTestJWTAuth()
 
 	jUser := &JwtUser{
 		ID:        1,
