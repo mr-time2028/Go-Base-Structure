@@ -19,6 +19,79 @@ func FakePostRequest(body string, url string, handler http.Handler) *httptest.Re
 	return rr
 }
 
+func TestRegister(t *testing.T) {
+	var testCases = []struct {
+		name               string
+		requestBody        string
+		expectedStatusCode int
+		expectedErr        bool
+	}{
+		{
+			"valid data",
+			`{
+				"email": "ramin@test.com",
+				"first_name": "Ramin",
+				"last_name": "Djawadi",
+				"password": "RaminPass1234",
+				"confirm_password": "RaminPass1234"
+			}`,
+			http.StatusOK,
+			false,
+		},
+		{
+			"duplicate email",
+			`{
+				"email": "John@test.com",
+				"first_name": "John",
+				"last_name": "Smith",
+				"password": "John1234",
+				"confirm_password": "John1234"
+			}`,
+			http.StatusBadRequest,
+			true,
+		},
+		{
+			"passwords are not match",
+			`{
+				"email": "ramin@test.com",
+				"first_name": "Ramin",
+				"last_name": "Djawadi",
+				"password": "RaminPass1234",
+				"confirm_password": "Pass1234"
+			}`,
+			http.StatusBadRequest,
+			true,
+		},
+		{
+			"not all fields in json",
+			`{
+				"email": "ramin@test.com",
+			}`,
+			http.StatusBadRequest,
+			true,
+		},
+		{
+			"invalid email address",
+			`{
+				"email": "ramin",
+				"first_name": "Ramin",
+				"last_name": "Djawadi",
+				"password": "RaminPass1234",
+				"confirm_password": "RaminPass1234"
+			}`,
+			http.StatusBadRequest,
+			true,
+		},
+	}
+
+	for _, e := range testCases {
+		rr := FakePostRequest(e.requestBody, "/register", http.HandlerFunc(Register))
+		if e.expectedStatusCode != rr.Code {
+			t.Errorf("%s: returned wrong status code; expected %d but got %d, %v", e.name, e.expectedStatusCode, rr.Code, rr.Body)
+		}
+	}
+}
+
 func TestLogin(t *testing.T) {
 	var theTests = []struct {
 		name               string
@@ -118,13 +191,13 @@ func TestRefreshToken(t *testing.T) {
 	for _, e := range theTests {
 		rr = FakePostRequest(e.requestBody, "/refresh", http.HandlerFunc(RefreshToken))
 		if e.expectedStatusCode != rr.Code {
-			t.Errorf("%s: returned wrong status code; expected %d but got %d", e.name, e.expectedStatusCode, rr.Code)
+			t.Errorf("%s: returned wrong status code; expected %d but got %d, err is", e.name, e.expectedStatusCode, rr.Code)
 		}
 	}
 
-	// test when user not in database but has a valid refresh token (id 5 is not in database)
+	// test when user not in database but has a valid refresh token (id 240 is not in database)
 	jUser := &auth.JwtUser{
-		ID:        5,
+		ID:        240,
 		FirstName: "Alex",
 		LastName:  "Parker",
 	}
