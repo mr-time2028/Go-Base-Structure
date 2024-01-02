@@ -12,6 +12,7 @@ type BookInterface interface {
 }
 
 type UserInterface interface {
+	CheckIfExistsUser(email string) (bool, error)
 	GetUserByEmail(email string) (*User, error)
 	GetUserByID(id int) (*User, error)
 	InsertOneUser(user *User) (int, error)

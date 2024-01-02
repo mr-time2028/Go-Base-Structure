@@ -153,3 +153,39 @@ func TestUser_InsertManyUsers(t *testing.T) {
 		})
 	}
 }
+
+func TestUser_CheckIfExistsUser(t *testing.T) {
+	var testCases = []struct {
+		name  string
+		user  *User
+		expectedErr bool
+		isExists bool
+	} {
+		{
+			"user exists",
+			&User{Email: "John@test.com"},
+			false,
+			true,
+		},
+		{
+			"user does not exists",
+			&User{Email: "noexists@test.com"},
+			false,
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			user := User{}
+			isExists, err := user.CheckIfExistsUser(tc.user.Email)
+
+			// validation
+			if tc.expectedErr && err == nil || !tc.expectedErr && err != nil {
+				t.Errorf("unexpected error: expectedErr is %v, err is %v", tc.expectedErr, err)
+			} else if isExists != tc.isExists {
+				t.Errorf("expected user exists %v but got user exists %v", tc.isExists, isExists)
+			}
+		})
+	}
+}

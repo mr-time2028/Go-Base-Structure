@@ -1,15 +1,31 @@
 package models
 
 import (
+	"errors"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 type User struct {
-	ID        int
+	ID        int `gorm:"primaryKey;autoIncrement"`
 	Email     string
 	FirstName string
 	LastName  string
 	Password  string
+}
+
+// CheckIfExistsUser check if user already exists in the database
+func (u *User) CheckIfExistsUser(email string) (bool, error) {
+	var user *User
+	condition := User{Email: email}
+	result := modelsApp.DB.GormDB.Where(condition).First(&user)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return false, nil
+		}
+		return false, result.Error
+	}
+	return true, nil
 }
 
 // GetUserByEmail is a simple example of how get one user by email using gorm orm
