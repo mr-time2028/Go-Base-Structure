@@ -2,8 +2,34 @@ package validators
 
 import "testing"
 
-// go-validator package has been previously tested by the development team
-// if you want to use of own logic for email format validation, write tests for that here...
-func TestValidation_EmailValidation(t *testing.T) {
 
+func TestValidation_EmailValidation(t *testing.T) {
+	theTests := []struct {
+		name        string
+		email		string
+		expectedErr bool
+	} {
+		{
+			"valid email",
+			"John@valid.com",
+			false,
+		},
+		{
+			"invalid email",
+			"John.com",
+			true,
+		},
+	}
+
+	for _, tc := range theTests {
+		t.Run(tc.name, func(t *testing.T) {
+			validator := New()
+			validator.EmailValidation(tc.email)
+
+			if tc.expectedErr && validator.Valid() || !tc.expectedErr && !validator.Valid() {
+				err := validator.Errors.Get("email")
+				t.Errorf("unexpected error: %s", err)
+			}
+		})
+	}
 }
