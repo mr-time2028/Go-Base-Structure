@@ -1,17 +1,41 @@
 package validators
 
 import (
+	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"unicode"
 )
 
-// PasswordMatchesValidation check if two password are match, password from db (registered) and password from client
-func (v *Validation) PasswordMatchesValidation(hashedDBPassword, ClientPassword string) {
+const (
+	PasswordMinLength = 8
+	PasswordMaxLength = 30
+
+	PasswordMinLengthErrMsg = `this field must be a minimum length of %d characters`
+	PasswordMaxLengthErrMsg = `this field must be a maximum length of %d characters`
+	PasswordUppercaseErrMsg = `this field must contain at least one uppercase letter`
+	PasswordLowercaseErrMsg = `this field must contain at least one lowercase letter`
+	PasswordDigitErrMsg     = `this field must contain at least one digit`
+	PasswordsNotMatchErrMsg = `passwords should be match`
+)
+
+// PasswordMatchesHashValidation check if two password are match, password from db (registered) and password from client
+func (v *Validation) PasswordMatchesHashValidation(hashedDBPassword, ClientPassword string) {
 	err := bcrypt.CompareHashAndPassword([]byte(hashedDBPassword), []byte(ClientPassword))
 	if err != nil {
 		v.Errors.Add("password", err.Error())
-		v.Errors.Code = http.StatusUnauthorized
+		if err == bcrypt.ErrMismatchedHashAndPassword {
+			v.Errors.Code = http.StatusUnauthorized
+		} else {
+			v.Errors.Code = http.StatusInternalServerError
+		}
+	}
+}
+
+// PasswordsMatchesCharactersValidation check if user password are matches
+func (v *Validation) PasswordsMatchesCharactersValidation(password1, password2 string) {
+	if password1 != password2 {
+		v.Errors.Add("password", PasswordsNotMatchErrMsg)
 	}
 }
 
@@ -31,19 +55,27 @@ func (v *Validation) PasswordCharacterValidation(password string) {
 		}
 	}
 
-	if len(password) < 8 {
-		v.Errors.Add("password", "this field must be a minimum length of 8 characters")
+	if len(password) < PasswordMinLength {
+		v.Errors.Add("password", fmt.Sprintf(PasswordMinLengthErrMsg, PasswordMinLength))
 	}
-	if len(password) > 30 {
-		v.Errors.Add("password", "this field must be a maximum length of 30 characters")
+	if len(password) > PasswordMaxLength {
+		v.Errors.Add("password", fmt.Sprintf(PasswordMaxLengthErrMsg, PasswordMaxLength))
 	}
 	if !hasUppercase {
-		v.Errors.Add("password", "this field must contain at least one uppercase letter")
+		v.Errors.Add("password", PasswordUppercaseErrMsg)
 	}
 	if !hasLowercase {
-		v.Errors.Add("password", "this field must contain at least one lowercase letter")
+		v.Errors.Add("password", PasswordLowercaseErrMsg)
 	}
 	if !hasDigit {
-		v.Errors.Add("password", "this field must contain at least one digit")
+		v.Errors.Add("password", PasswordDigitErrMsg)
+	}
+}
+
+// UserPasswordValidation check user password
+func (v *Validation) UserPasswordValidation(password1, password2 string) {
+	v.PasswordsMatchesCharactersValidation(password1, password2)
+	if v.Valid() {
+		v.PasswordCharacterValidation(password1)
 	}
 }

@@ -13,7 +13,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = json.WriteJSON(w, http.StatusOK, &books); err != nil {
+	if err = json.WriteJSON(w, http.StatusOK, books); err != nil {
 		bookApp.Logger.ServerError(w, "unable to write json", err)
 		return
 	}
