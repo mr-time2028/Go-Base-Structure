@@ -1,14 +1,16 @@
 package user
 
 import (
-	"github.com/go-chi/chi/v5"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/go-chi/chi/v5"
 )
 
 var routes = []string{
 	"/login",
+	"/register",
 	"/refresh",
 }
 

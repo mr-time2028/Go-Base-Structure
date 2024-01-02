@@ -10,6 +10,7 @@ func Routes() http.Handler {
 	mux := chi.NewRouter()
 
 	mux.Post("/login", Login)
+	mux.Post("/register", Register)
 	mux.Post("/refresh", RefreshToken)
 
 	return mux
