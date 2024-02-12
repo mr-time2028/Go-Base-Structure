@@ -24,4 +24,8 @@ var Commands = map[string]Command{
 		Description: "this command simply create a superuser in database with given username and password as CLI parameters.",
 		Function:    createSuperUser,
 	},
+	"migrate": {
+		Description: "this command simply migrate all structs to the tables in database.",
+		Function:    migrate,
+	},
 }
