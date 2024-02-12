@@ -78,13 +78,6 @@ func newApplication() *settings.Application {
 	mdls := models.NewModels()
 	app.Models = mdls
 
-	// auto migrations models
-	err = mdls.AutoMigrateModels(DB.GormDB)
-	if err != nil {
-		logr.Fatal("auto migration failed! ", err)
-	}
-	logr.Info("auto migration was successful!")
-
 	// pass some config to models package
 	models.NewModelsApp(DB)
 
